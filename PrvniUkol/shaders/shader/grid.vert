@@ -23,20 +23,9 @@ vec3 sphere(vec2 paramPos)
 	);
 }
 
-vec3 something(vec2 paramPos)
-{
-	float azimuth = 2 * PI * paramPos.x;
-	return vec3(
-		cos(azimuth)* paramPos.y,
-		sin(azimuth)* paramPos.y,
-		1 - paramPos.y
-	);
-}
-
 vec3 surface(vec2 paramPos)
 {
-    //return sphere(paramPos);
-    return something(paramPos);
+    return sphere(paramPos);
 }
 
 vec3 normal(vec2 paramPos)
@@ -48,43 +37,45 @@ vec3 normal(vec2 paramPos)
 	return normalize(cross(tx, ty));
 }
 
+vec3 phong(vec2 paramPos)
+{
+    vec3 position = surface(paramPos);
+    vec3 normal = normal(paramPos);
+
+    vec3 smerSvetla = normalize(poziceSvetla - position);
+    vec3 smerOka = normalize(oko - position);
+    float lesklost = 70.0;
+
+    //lepší v uniformech
+    vec3 matDifCol = vec3(0.8, 0.9, 0.6);//difůzní barva (barva co sežere materiál
+    vec3 matSpecCol = vec3(1.0);//zrcadlově odražená barva
+    vec3 ambientLightCol = vec3(0.3, 0.1, 0.5);//barva odrazu?
+    vec3 directLightCol = vec3(1.0, 0.9, 0.9);//barva světla
+
+    vec3 reflected = reflect(-smerSvetla, normal); //smerSvětla záporně
+
+    float difCoef = max(0, dot(normal, smerSvetla));
+    float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+
+    vec3 ambiComponent = ambientLightCol * matDifCol; //ambientní složka (ještě může být vzdálenost světla)
+    vec3 difComponent = directLightCol * matDifCol * difCoef;  //difůzní složka
+    vec3 specComponent = directLightCol * matSpecCol * specCoef;
+
+    return ambiComponent + difComponent + specComponent;
+}
+
 void main() {
-
-    //gl_Position = mat * vec4(inPosition, 0.0, 1.0);
-
     vec3 position = surface(inPosition);
     gl_Position = mat * vec4(position, 1.0);
 
-    vec3 normal = normal(inPosition);
-	//vertColor = vec3(inPosition, 0.0);
-	vertColor = vec3(normal) * 0.5 + 0.5;
-
-    vec3 smerSvetla = normalize(poziceSvetla - position);
-	vec3 smerOka = normalize(oko - position);
-	float lesklost = 70.0;
-
-	vertNormal = normal;
-	vertPosition = position;
-	texCoord = inPosition * 4;
+    vertNormal = normal(inPosition);;
+    vertColor = vec3(normal(inPosition)) * 0.5 + 0.5;
+    vertPosition = position;
+    texCoord = inPosition * 4;
 
     if(svetlo == 1.0)
     {
-	//lepší v uniformech
-	    vec3 matDifCol = vec3(0.8, 0.9, 0.6);//difůzní barva (barva co sežere materiál
-	    vec3 matSpecCol = vec3(1.0);//zrcadlově odražená barva
-	    vec3 ambientLightCol = vec3(0.3, 0.1, 0.5);//barva odrazu?
-        vec3 directLightCol = vec3(1.0, 0.9, 0.9);//barva světla
-
-        vec3 reflected = reflect(-smerSvetla, normal); //smerSvětla záporně
-
-        float difCoef = max(0, dot(normal, smerSvetla));
-        float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
-
-        vec3 ambiComponent = ambientLightCol * matDifCol; //ambientní složka (ještě může být vzdálenost světla)
-        vec3 difComponent = directLightCol * matDifCol * difCoef;  //difůzní složka
-        vec3 specComponent = directLightCol * matSpecCol * specCoef;
-
-        vertColor = ambiComponent + difComponent + specComponent;
+	vertColor = phong(inPosition);
     }
     if (svetlo == 3.0)
     {
