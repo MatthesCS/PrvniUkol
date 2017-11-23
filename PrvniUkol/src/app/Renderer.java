@@ -66,8 +66,8 @@ public class Renderer implements GLEventListener, MouseListener,
         // shader files are in /shaders/ directory
         // shaders directory must be set as a source directory of the project
         // e.g. in Eclipse via main menu Project/Properties/Java Build Path/Source
-        shaderProgram = ShaderUtils.loadProgram(gl, "/simple");
-        gridShaderProgram = ShaderUtils.loadProgram(gl, "/grid");
+        shaderProgram = ShaderUtils.loadProgram(gl, "/shader/simple");
+        gridShaderProgram = ShaderUtils.loadProgram(gl, "/shader/grid");
         createBuffers(gl);
 
         locMat = gl.glGetUniformLocation(shaderProgram, "mat");
