@@ -68,7 +68,7 @@ vec3 phong(vec2 paramPos, int cisloSvetla)
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
 
-    //vec3 smerSvetla = normalize(poziceSvetla - position);
+
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
     float lesklost = 70.0;

@@ -39,15 +39,15 @@ public class Renderer implements GLEventListener, MouseListener,
     OGLTextRenderer textRenderer;
     boolean poly = false, k = true;
 
-    int shaderProgram, locMat, locPoziceSvetla, locSvetlo, locOko;
-    int gridShaderProgram, gridLocMat, gridLocPoziceSvetla, gridLocSvetlo, gridLocOko, gridLocSvetlaPozice;
+    int shaderProgram, locMat, locSvetlo, locOko;
+    int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
     int svetlo;
 
     
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
-    Vec3D poziceSvetla, poziceOka;
-    List<Vec3D> svetlaPozice = new ArrayList<>();
+    Vec3D poziceOka;
+    List<Vec3D> poziceSvetel = new ArrayList<>();
 
     OGLTexture2D texture;
     OGLTexture2D.Viewer textureViewer;
@@ -75,16 +75,14 @@ public class Renderer implements GLEventListener, MouseListener,
         createBuffers(gl);
 
         locMat = gl.glGetUniformLocation(shaderProgram, "mat");
-        locPoziceSvetla = gl.glGetUniformLocation(shaderProgram, "poziceSvetla");
         locSvetlo = gl.glGetUniformLocation(shaderProgram, "svetlo");
         locOko = gl.glGetUniformLocation(shaderProgram, "oko");
 
 
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
-        gridLocPoziceSvetla = gl.glGetUniformLocation(gridShaderProgram, "poziceSvetla");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-        gridLocSvetlaPozice  = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
+        gridLocPoziceSvetel  = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
         
         //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
         //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
@@ -145,11 +143,10 @@ public class Renderer implements GLEventListener, MouseListener,
                         0, 0, 1, 0, -1, 0
                 };
 
-        poziceSvetla = new Vec3D(0, 0, 10);
         poziceOka = cam.getEye();
         
-        svetlaPozice.add(new Vec3D(0, 5, 10));
-        svetlaPozice.add(new Vec3D(5, 0, 10));
+        poziceSvetel.add(new Vec3D(0, 5, 10));
+        poziceSvetel.add(new Vec3D(5, 0, 10));
 
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++)
@@ -184,7 +181,6 @@ public class Renderer implements GLEventListener, MouseListener,
             gl.glUseProgram(shaderProgram);
             gl.glUniformMatrix4fv(locMat, 1, false,
                     ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-            gl.glUniform3fv(locPoziceSvetla, 1, ToFloatArray.convert(poziceSvetla), 0);
             gl.glUniform3fv(locOko, 1, ToFloatArray.convert(poziceOka), 0);
             gl.glUniform1f(locSvetlo, svetlo);
 
@@ -194,9 +190,8 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUseProgram(gridShaderProgram);
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-        gl.glUniform3fv(gridLocPoziceSvetla, 1, ToFloatArray.convert(poziceSvetla), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
-        gl.glUniform3fv(gridLocSvetlaPozice, svetlaPozice.size(), ToFloatArray.convert(svetlaPozice), 0);
+        gl.glUniform3fv(gridLocPoziceSvetel, poziceSvetel.size(), ToFloatArray.convert(poziceSvetel), 0);
         
         gl.glUniform1f(gridLocSvetlo, svetlo);
 
