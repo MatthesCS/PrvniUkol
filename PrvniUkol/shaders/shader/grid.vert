@@ -8,6 +8,10 @@ uniform mat4 mat; // variable constant for all vertices in a single draw
 uniform vec3 svetlaPozice[2];
 uniform vec3 oko;
 uniform float svetlo;
+uniform vec3 ambBarva;
+uniform vec3 difBarva;
+uniform vec3 specBarva;
+uniform vec3 primBarva;
 
 const float PI = 3.1415927;
 const float DELTA = 0.001;
@@ -74,10 +78,10 @@ vec3 phong(vec2 paramPos, int cisloSvetla)
     float lesklost = 70.0;
 
     //lepší v uniformech
-    vec3 matDifCol = vec3(0.8, 0.9, 0.6);//difůzní barva (barva co sežere materiál
-    vec3 matSpecCol = vec3(1.0);//zrcadlově odražená barva
-    vec3 ambientLightCol = vec3(0.3, 0.1, 0.5);//barva odrazu?
-    vec3 directLightCol = vec3(1.0, 0.9, 0.9);//barva světla
+    vec3 matDifCol = difBarva;
+    vec3 matSpecCol = specBarva;
+    vec3 ambientLightCol = ambBarva;
+    vec3 directLightCol = primBarva;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvětla záporně
 
@@ -101,7 +105,7 @@ void main() {
     //vertColor = vec3(position);
     vertPosition = position;
     texCoord = mod(inPosition * 4,1);
-//vertColor = vec3(texCoord, 0.0);
+    //vertColor = vec3(texCoord, 0.0);
 
     if(svetlo == 1.0)
     {

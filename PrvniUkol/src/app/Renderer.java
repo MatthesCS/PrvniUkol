@@ -41,12 +41,13 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int shaderProgram, locMat, locSvetlo, locOko;
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
+    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva;
     int svetlo;
 
     
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
-    Vec3D poziceOka;
+    Vec3D poziceOka, difuzniBarvaSvetla, specularniBarvaSvetla, ambientniBarvaSvetla, primaBarvaSvetla;
     List<Vec3D> poziceSvetel = new ArrayList<>();
 
     OGLTexture2D texture;
@@ -67,9 +68,6 @@ public class Renderer implements GLEventListener, MouseListener,
 
         textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
 
-        // shader files are in /shaders/ directory
-        // shaders directory must be set as a source directory of the project
-        // e.g. in Eclipse via main menu Project/Properties/Java Build Path/Source
         shaderProgram = ShaderUtils.loadProgram(gl, "/shader/simple");
         gridShaderProgram = ShaderUtils.loadProgram(gl, "/shader/grid");
         createBuffers(gl);
@@ -84,8 +82,10 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
         gridLocPoziceSvetel  = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
         
-        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
-        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
+        gridLocDifBarva = gl.glGetUniformLocation(gridShaderProgram, "difBarva");
+        gridLocSpecBarva = gl.glGetUniformLocation(gridShaderProgram, "specBarva");
+        gridLocAmbBarva = gl.glGetUniformLocation(gridShaderProgram, "ambBarva");
+        gridLocPrimBarva = gl.glGetUniformLocation(gridShaderProgram, "primBarva");
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -94,20 +94,12 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
 
-        svetlo = 0;
-
         texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
     void createBuffers(GL2GL3 gl)
-    {
-        // vertices are not shared among triangles (and thus faces) so each face
-        // can have a correct normal in all vertices
-        // also because of this, the vertices can be directly drawn as GL_TRIANGLES
-        // (three and three vertices form one face)
-        // triangles defined in index buffer
-        
+    {        
         grid = MeshGenerator.generateGrid(10, 10, gl, "inPosition");
         float[] cube =
                 {
@@ -145,8 +137,21 @@ public class Renderer implements GLEventListener, MouseListener,
 
         poziceOka = cam.getEye();
         
-        poziceSvetel.add(new Vec3D(0, 5, 10));
-        poziceSvetel.add(new Vec3D(5, 0, 10));
+        poziceSvetel.add(new Vec3D(0, 0, 10));
+        poziceSvetel.add(new Vec3D(5, 5, -3));
+
+        svetlo = 0;
+        difuzniBarvaSvetla = new Vec3D(0.8, 0.9, 0.6);
+        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);
+        ambientniBarvaSvetla = new Vec3D(0.3,0.1,0.5);
+        primaBarvaSvetla = new Vec3D(1.0, 0.9, 0.9);
+        
+        /*
+        difuzniBarvaSvetla = new Vec3D(0.6, 0.6, 0.6);//co sežere matroš
+        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
+        ambientniBarvaSvetla = new Vec3D(0.3,0.3,0.3);//odraz?
+        primaBarvaSvetla = new Vec3D(0.9, 0.9, 0.9);//světlo
+        */
 
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++)
@@ -192,6 +197,10 @@ public class Renderer implements GLEventListener, MouseListener,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
         gl.glUniform3fv(gridLocPoziceSvetel, poziceSvetel.size(), ToFloatArray.convert(poziceSvetel), 0);
+        gl.glUniform3fv(gridLocAmbBarva, 1, ToFloatArray.convert(ambientniBarvaSvetla), 0);
+        gl.glUniform3fv(gridLocDifBarva, 1, ToFloatArray.convert(difuzniBarvaSvetla), 0);
+        gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
+        gl.glUniform3fv(gridLocPrimBarva, 1, ToFloatArray.convert(primaBarvaSvetla), 0);        
         
         gl.glUniform1f(gridLocSvetlo, svetlo);
 

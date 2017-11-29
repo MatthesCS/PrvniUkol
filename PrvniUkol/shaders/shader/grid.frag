@@ -9,9 +9,9 @@ uniform vec3 oko;
 uniform float svetlo;
 uniform sampler2D textureID;
 void main() {
-	//outColor = vec4(vertColor, 1.0) * texture(textureID, texCoord);
+	outColor = vec4(vertColor, 1.0) * texture(textureID, texCoord);
 	//outColor = texture(textureID, texCoord);
-        outColor = vec4(vertColor, 1.0);
+        //outColor = vec4(vertColor, 1.0);
 
         vec3 inPosition = vertPosition;
         vec3 inNormal = normalize(vertNormal);
