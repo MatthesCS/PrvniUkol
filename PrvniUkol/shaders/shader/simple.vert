@@ -16,7 +16,7 @@ void main() {
 	vec3 smerOka = normalize(oko - inPosition);
 	float lesklost = 70.0;
 
-	vertColor = inNormal * 0.5 + 0.5;
+	vertColor = inNormal;
 	vertNormal = inNormal;
 	vertPosition = inPosition;
 

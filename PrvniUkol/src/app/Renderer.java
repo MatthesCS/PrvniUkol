@@ -11,6 +11,8 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import transforms.Camera;
 import transforms.Mat4;
@@ -38,12 +40,14 @@ public class Renderer implements GLEventListener, MouseListener,
     boolean poly = false, k = true;
 
     int shaderProgram, locMat, locPoziceSvetla, locSvetlo, locOko;
-    int gridShaderProgram, gridLocMat, gridLocPoziceSvetla, gridLocSvetlo, gridLocOko;
+    int gridShaderProgram, gridLocMat, gridLocPoziceSvetla, gridLocSvetlo, gridLocOko, gridLocSvetlaPozice;
     int svetlo;
 
+    
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
     Vec3D poziceSvetla, poziceOka;
+    List<Vec3D> svetlaPozice = new ArrayList<>();
 
     OGLTexture2D texture;
     OGLTexture2D.Viewer textureViewer;
@@ -58,7 +62,7 @@ public class Renderer implements GLEventListener, MouseListener,
         // get and set debug version of GL class
         gl = OGLUtils.getDebugGL(gl);
         glDrawable.setGL(gl);
-
+        
         OGLUtils.printOGLparameters(gl);
 
         textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
@@ -80,20 +84,21 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocPoziceSvetla = gl.glGetUniformLocation(gridShaderProgram, "poziceSvetla");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-
-        texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
+        gridLocSvetlaPozice  = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
+        
+        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
+        //gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
                 .withZenith(Math.PI * -0.125);
+        
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-        grid = MeshGenerator.generateGrid(10, 10, gl, "inPosition");
 
         svetlo = 0;
 
+        texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
@@ -104,6 +109,8 @@ public class Renderer implements GLEventListener, MouseListener,
         // also because of this, the vertices can be directly drawn as GL_TRIANGLES
         // (three and three vertices form one face)
         // triangles defined in index buffer
+        
+        grid = MeshGenerator.generateGrid(10, 10, gl, "inPosition");
         float[] cube =
                 {
                         // bottom (z-) face
@@ -138,8 +145,11 @@ public class Renderer implements GLEventListener, MouseListener,
                         0, 0, 1, 0, -1, 0
                 };
 
-        poziceSvetla = new Vec3D(4, 2, 5);
+        poziceSvetla = new Vec3D(0, 0, 10);
         poziceOka = cam.getEye();
+        
+        svetlaPozice.add(new Vec3D(0, 5, 10));
+        svetlaPozice.add(new Vec3D(5, 0, 10));
 
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++)
@@ -186,6 +196,8 @@ public class Renderer implements GLEventListener, MouseListener,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocPoziceSvetla, 1, ToFloatArray.convert(poziceSvetla), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
+        gl.glUniform3fv(gridLocSvetlaPozice, svetlaPozice.size(), ToFloatArray.convert(svetlaPozice), 0);
+        
         gl.glUniform1f(gridLocSvetlo, svetlo);
 
         texture.bind(shaderProgram, "textureID", 0);
