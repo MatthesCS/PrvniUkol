@@ -34,7 +34,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int width, height, ox, oy;
 
-    OGLBuffers buffers, grid;
+    OGLBuffers buffers, grid, svetloBuf;
     OGLTextRenderer textRenderer;
     boolean poly = false, k = true;
 
@@ -42,6 +42,7 @@ public class Renderer implements GLEventListener, MouseListener,
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
     int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva;
     int svetlo, pocetBodu = 50;
+    int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
 
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
@@ -67,7 +68,12 @@ public class Renderer implements GLEventListener, MouseListener,
 
         shaderProgram = ShaderUtils.loadProgram(gl, "/shader/simple");
         gridShaderProgram = ShaderUtils.loadProgram(gl, "/shader/grid");
+        svetloShaderProgram = ShaderUtils.loadProgram(gl, "/shader/svetlo");
         createBuffers(gl);
+
+        locSvetloMat = gl.glGetUniformLocation(svetloShaderProgram, "mat");
+        locSvetloPozice = gl.glGetUniformLocation(svetloShaderProgram, "pozice");
+        locSvetloBarva = gl.glGetUniformLocation(svetloShaderProgram, "barva");
 
         locMat = gl.glGetUniformLocation(shaderProgram, "mat");
         locSvetlo = gl.glGetUniformLocation(shaderProgram, "svetlo");
@@ -95,6 +101,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     void createBuffers(GL2GL3 gl) {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
+        svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
         float[] cube
                 = {
                     // bottom (z-) face
@@ -132,18 +139,18 @@ public class Renderer implements GLEventListener, MouseListener,
         poziceOka = cam.getEye();
 
         poziceSvetel.add(new Vec3D(5, 5, -3));
-        poziceSvetel.add(new Vec3D(0, 0, 5));
+        poziceSvetel.add(new Vec3D(0, 0, 0));
         poziceSvetel.add(new Vec3D(0, 0, -5));
 
         svetlo = 0;
-        
+
         difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
-        ambientniBarvaSvetla = new Vec3D(0.2,0.2,0.2);//odraz?
+        ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);//odraz?
         primeBarvySvetla.add(new Vec3D(0.09, 0.09, 0.99));//světlo
         primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));//světlo
         primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));//světlo
-         
+
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++) {
             indexBufferData[i * 6] = i * 4;
@@ -164,7 +171,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
-        
+
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, glDrawable.getGL().getGL2GL3(), "inPosition");
         poziceOka = cam.getEye();
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
@@ -182,6 +189,16 @@ public class Renderer implements GLEventListener, MouseListener,
             buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
         }
 
+        for (int i = 0; i < poziceSvetel.size(); i++) {
+            gl.glUseProgram(svetloShaderProgram);
+            gl.glUniformMatrix4fv(locSvetloMat, 1, false,
+                    ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
+            gl.glUniform3fv(locSvetloBarva, 1, ToFloatArray.convert(primeBarvySvetla.get(i)), 0);
+            gl.glUniform3fv(locSvetloPozice, 1, ToFloatArray.convert(poziceSvetel.get(i)), 0);
+
+            svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
+        }
+
         gl.glUseProgram(gridShaderProgram);
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
@@ -191,7 +208,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform3fv(gridLocDifBarva, 1, ToFloatArray.convert(difuzniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocPrimBarva, primeBarvySvetla.size(), ToFloatArray.convert(primeBarvySvetla), 0);
-        
+
         gl.glUniform1f(gridLocSvetlo, svetlo);
 
         texture.bind(shaderProgram, "textureID", 0);
@@ -299,14 +316,12 @@ public class Renderer implements GLEventListener, MouseListener,
                 }
                 break;
             case KeyEvent.VK_NUMPAD9:
-                if (pocetBodu < 100) 
-                {
+                if (pocetBodu < 100) {
                     pocetBodu++;
                 }
                 break;
             case KeyEvent.VK_NUMPAD8:
-                if (pocetBodu > 4) 
-                {
+                if (pocetBodu > 4) {
                     pocetBodu--;
                 }
                 break;
