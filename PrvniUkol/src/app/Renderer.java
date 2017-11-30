@@ -41,7 +41,7 @@ public class Renderer implements GLEventListener, MouseListener,
     int shaderProgram, locMat, locSvetlo, locOko;
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
     int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva;
-    int svetlo, pocetBodu = 10;
+    int svetlo, pocetBodu = 50;
 
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
@@ -135,17 +135,18 @@ public class Renderer implements GLEventListener, MouseListener,
         poziceSvetel.add(new Vec3D(5, 5, -3));
 
         svetlo = 0;
+        /*
         difuzniBarvaSvetla = new Vec3D(0.8, 0.9, 0.6);
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);
         ambientniBarvaSvetla = new Vec3D(0.3, 0.1, 0.5);
         primaBarvaSvetla = new Vec3D(1.0, 0.9, 0.9);
-
-        /*
-        difuzniBarvaSvetla = new Vec3D(0.6, 0.6, 0.6);//co sežere matroš
+        */
+        
+        difuzniBarvaSvetla = new Vec3D(0.85, 0.85, 0.9);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
-        ambientniBarvaSvetla = new Vec3D(0.3,0.3,0.3);//odraz?
-        primaBarvaSvetla = new Vec3D(0.9, 0.9, 0.9);//světlo
-         */
+        ambientniBarvaSvetla = new Vec3D(0.4,0.4,0.4);//odraz?
+        primaBarvaSvetla = new Vec3D(0.99, 0.99, 0.80);//světlo
+         
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++) {
             indexBufferData[i * 6] = i * 4;

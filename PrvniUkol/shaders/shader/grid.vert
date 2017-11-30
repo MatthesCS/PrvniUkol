@@ -34,21 +34,13 @@ vec3 torus(vec2 paramPos)
 
 vec3 sphere(vec2 paramPos)
 {
-	float z = 2 * PI * paramPos.x;
-	float a = PI * (0.5 - paramPos.y);
+	float a = 2 * PI * paramPos.x;
+	float z = PI * (0.5 - paramPos.y);
 	return vec3(
-		cos(z)*cos(a),
-		sin(z)*cos(a),
-		sin(a)
+		cos(a)*cos(z),
+		sin(a)*cos(z),
+		sin(z)
 	);
-        /*
-        float s = 2 * PI * paramPos.x;
-	float t = PI * paramPos.y;
-	return vec3(
-		sin(t)*cos(s),
-		sin(t)*sin(s),
-		cos(t)
-	);*/
 }
 
 vec3 surface(vec2 paramPos)
@@ -64,7 +56,7 @@ vec3 normal(vec2 paramPos)
     vec2 dy = vec2(0, DELTA);
 	vec3 tx = surface(paramPos + dx) - surface(paramPos - dx);
 	vec3 ty = surface(paramPos + dy) - surface(paramPos - dy);
-	return normalize(cross(tx, ty));
+	return normalize(cross(ty, tx));
 }
 
 vec3 phong(vec2 paramPos, int cisloSvetla)
