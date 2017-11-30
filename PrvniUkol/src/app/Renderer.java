@@ -131,16 +131,10 @@ public class Renderer implements GLEventListener, MouseListener,
 
         poziceOka = cam.getEye();
 
-        poziceSvetel.add(new Vec3D(0, 0, 10));
+        poziceSvetel.add(new Vec3D(0, 0, 5));
         poziceSvetel.add(new Vec3D(5, 5, -3));
 
         svetlo = 0;
-        /*
-        difuzniBarvaSvetla = new Vec3D(0.8, 0.9, 0.6);
-        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);
-        ambientniBarvaSvetla = new Vec3D(0.3, 0.1, 0.5);
-        primaBarvaSvetla = new Vec3D(1.0, 0.9, 0.9);
-        */
         
         difuzniBarvaSvetla = new Vec3D(0.85, 0.85, 0.9);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
@@ -210,6 +204,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         textRenderer.drawStr2D(3, height - 20, text);
         textRenderer.drawStr2D(width - 90, 3, " (c) PGRF UHK");
+        System.out.println(svetlo);
     }
 
     @Override

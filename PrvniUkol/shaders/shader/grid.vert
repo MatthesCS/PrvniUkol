@@ -87,6 +87,33 @@ vec3 phong(vec2 paramPos, int cisloSvetla)
     return ambiComponent + difComponent + specComponent;
 }
 
+vec3 blinnPhong(vec2 paramPos, int cisloSvetla)
+{
+    vec3 position = surface(paramPos);
+    vec3 normal = normal(paramPos);
+
+    vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
+    vec3 smerOka = normalize(oko - position);
+    vec3 halfVektor = normalize(smerSvetla + smerOka);
+    float lesklost = 70.0;
+
+    vec3 matDifCol = difBarva;
+    vec3 matSpecCol = specBarva;
+    vec3 ambientLightCol = ambBarva;
+    vec3 directLightCol = primBarva;
+
+    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvětla záporně
+
+    float difCoef = max(0, dot(normal, smerSvetla));
+    float specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+
+    vec3 ambiComponent = ambientLightCol * matDifCol; //ambientní složka (ještě může být vzdálenost světla)
+    vec3 difComponent = directLightCol * matDifCol * difCoef;  //difůzní složka
+    vec3 specComponent = directLightCol * matSpecCol * specCoef;
+
+    return ambiComponent + difComponent + specComponent;
+}
+
 void main() {
     vec3 position = surface(inPosition);
     gl_Position = mat * vec4(position, 1.0);
@@ -103,6 +130,10 @@ void main() {
     if(svetlo == 1.0)
     {
 	vertColor = phong(inPosition, 0) * phong(inPosition, 1);
+     }
+    else if(svetlo == 2.0)
+    {
+        vertColor = blinnPhong(inPosition, 0) * blinnPhong(inPosition, 1);
     }
     if (svetlo == 3.0)
     {

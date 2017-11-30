@@ -46,8 +46,8 @@ void main() {
         //outColor = vec4(vertColor, 1.0);
 
 
-        if(svetlo == 2.0)
+        /*if(svetlo == 2.0)
         {
             outColor = outColor *  vec4(phong(0) * phong(1), 1.0);
-        }
+        }*/
 } 
