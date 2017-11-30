@@ -98,6 +98,7 @@ void main() {
     vertPosition = position;
     texCoord = mod(inPosition * 4,1);
     //vertColor = vec3(texCoord, 0.0);
+    vertColor = vec3(1.0);
 
     if(svetlo == 1.0)
     {
