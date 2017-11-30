@@ -5,13 +5,14 @@ out vec3 vertNormal;
 out vec3 vertPosition;
 out vec2 texCoord;
 uniform mat4 mat; // variable constant for all vertices in a single draw
-uniform vec3 svetlaPozice[2];
+const int POCETSVETEL = 3;
+uniform vec3 svetlaPozice[POCETSVETEL];
 uniform vec3 oko;
 uniform float svetlo;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
-uniform vec3 primBarva;
+uniform vec3 primBarva[POCETSVETEL];
 
 const float PI = 3.1415927;
 const float DELTA = 0.001;
@@ -59,35 +60,31 @@ vec3 normal(vec2 paramPos)
 	return normalize(cross(ty, tx));
 }
 
-vec3 phong(vec2 paramPos, int cisloSvetla)
+void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
-
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
     float lesklost = 70.0;
 
-    //lepší v uniformech
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
     vec3 ambientLightCol = ambBarva;
-    vec3 directLightCol = primBarva;
+    vec3 directLightCol = primBarva[cisloSvetla];
 
-    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvětla záporně
+    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
 
     float difCoef = max(0, dot(normal, smerSvetla));
     float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
 
-    vec3 ambiComponent = ambientLightCol * matDifCol; //ambientní složka (ještě může být vzdálenost světla)
-    vec3 difComponent = directLightCol * matDifCol * difCoef;  //difůzní složka
-    vec3 specComponent = directLightCol * matSpecCol * specCoef;
-
-    return ambiComponent + difComponent + specComponent;
+    ambi = ambientLightCol * matDifCol;
+    diff = directLightCol * matDifCol * difCoef; 
+    spec = directLightCol * matSpecCol * specCoef;
 }
 
-vec3 blinnPhong(vec2 paramPos, int cisloSvetla)
+void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
@@ -100,18 +97,16 @@ vec3 blinnPhong(vec2 paramPos, int cisloSvetla)
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
     vec3 ambientLightCol = ambBarva;
-    vec3 directLightCol = primBarva;
+    vec3 directLightCol = primBarva[cisloSvetla];
 
-    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvětla záporně
+    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
 
     float difCoef = max(0, dot(normal, smerSvetla));
     float specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
 
-    vec3 ambiComponent = ambientLightCol * matDifCol; //ambientní složka (ještě může být vzdálenost světla)
-    vec3 difComponent = directLightCol * matDifCol * difCoef;  //difůzní složka
-    vec3 specComponent = directLightCol * matSpecCol * specCoef;
-
-    return ambiComponent + difComponent + specComponent;
+    ambi = ambientLightCol * matDifCol;
+    diff = directLightCol * matDifCol * difCoef;
+    spec = directLightCol * matSpecCol * specCoef;
 }
 
 void main() {
@@ -127,16 +122,27 @@ void main() {
     //vertColor = vec3(texCoord, 0.0);
     vertColor = vec3(1.0);
 
-    if(svetlo == 1.0)
+
+    vec3 ambientSum = vec3(0);
+    vec3 diffuseSum = vec3(0);
+    vec3 specSum = vec3(0);
+    vec3 ambi, diff, spec;
+
+    if(svetlo == 1.0 || svetlo == 2.0)
     {
-	vertColor = phong(inPosition, 0) * phong(inPosition, 1);
+	for( int i=0; i<POCETSVETEL; ++i )
+        {
+            if(svetlo == 1.0){
+            phong(inPosition, i, ambi, diff, spec);
+            }
+            if(svetlo == 2.0){
+            blinnPhong(inPosition, i, ambi, diff, spec);
+            }
+            ambientSum += ambi;
+            diffuseSum += diff;
+            specSum += spec;
+        }
+    ambientSum /= POCETSVETEL;
+    vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
      }
-    else if(svetlo == 2.0)
-    {
-        vertColor = blinnPhong(inPosition, 0) * blinnPhong(inPosition, 1);
-    }
-    if (svetlo == 3.0)
-    {
-        vertColor = vec3(1.0, 1.0, 1.0);
-    }
 } 

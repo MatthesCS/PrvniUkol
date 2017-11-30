@@ -5,15 +5,16 @@ in vec3 vertNormal;
 in vec3 vertPosition;
 in vec2 texCoord;
 uniform vec3 oko;
-uniform vec3 svetlaPozice[2];
+const int POCETSVETEL = 3;
+uniform vec3 svetlaPozice[POCETSVETEL];
 uniform float svetlo;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
-uniform vec3 primBarva;
+uniform vec3 primBarva[POCETSVETEL];
 uniform sampler2D textureID;
 
-vec3 phong(int cisloSvetla)
+void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
     vec3 normal = normalize(vertNormal);
@@ -26,18 +27,42 @@ vec3 phong(int cisloSvetla)
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
     vec3 ambientLightCol = ambBarva;
-    vec3 directLightCol = primBarva;
+    vec3 directLightCol = primBarva[cisloSvetla];
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
     float difCoef = max(0, dot(normal, smerSvetla));
     float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
 
-    vec3 ambiComponent = ambientLightCol * matDifCol;
-    vec3 difComponent = directLightCol * matDifCol * difCoef;
-    vec3 specComponent = directLightCol * matSpecCol * specCoef;
+    ambi = ambientLightCol * matDifCol;
+    diff = directLightCol * matDifCol * difCoef;
+    spec = directLightCol * matSpecCol * specCoef;
+}
 
-    return ambiComponent + difComponent + specComponent;
+void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
+{
+    vec3 position = vertPosition;
+    vec3 normal = normalize(vertNormal);
+
+
+    vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
+    vec3 smerOka = normalize(oko - position);
+    vec3 halfVektor = normalize(smerSvetla + smerOka);
+    float lesklost = 70.0;
+
+    vec3 matDifCol = difBarva;
+    vec3 matSpecCol = specBarva;
+    vec3 ambientLightCol = ambBarva;
+    vec3 directLightCol = primBarva[cisloSvetla];
+
+    vec3 reflected = reflect(normalize(-smerSvetla), normal);
+
+    float difCoef = max(0, dot(normal, smerSvetla));
+    float specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+
+    ambi = ambientLightCol * matDifCol;
+    diff = directLightCol * matDifCol * difCoef;
+    spec = directLightCol * matSpecCol * specCoef;
 }
 
 void main() {
@@ -46,8 +71,25 @@ void main() {
         //outColor = vec4(vertColor, 1.0);
 
 
-        /*if(svetlo == 2.0)
+        if(svetlo == 3.0 || svetlo == 4.0)
         {
-            outColor = outColor *  vec4(phong(0) * phong(1), 1.0);
-        }*/
+            vec3 ambientSum = vec3(0);
+            vec3 diffuseSum = vec3(0);
+            vec3 specSum = vec3(0);
+            vec3 ambi, diff, spec;
+            for( int i=0; i<POCETSVETEL; ++i )
+            {
+                if(svetlo == 3.0){
+                phong(i, ambi, diff, spec);
+                }
+                if(svetlo == 4.0){
+                blinnPhong(i, ambi, diff, spec);
+                }
+                ambientSum += ambi;
+                diffuseSum += diff;
+                specSum += spec;
+            }
+            ambientSum /= POCETSVETEL;
+            outColor = outColor * vec4(ambientSum + diffuseSum + specSum, 1.0);
+        }
 } 
