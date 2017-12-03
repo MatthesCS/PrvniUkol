@@ -1,5 +1,5 @@
 #version 150
-in vec3 vertColor; // input from the previous pipeline stage
+in vec4 vertColor; // input from the previous pipeline stage
 out vec4 outColor; // output from the fragment shader
 in vec3 vertNormal;
 in vec3 vertPosition;
@@ -66,7 +66,7 @@ void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 }
 
 void main() {
-	outColor = vec4(vertColor, 1.0) * texture(textureID, texCoord);
+	outColor = vertColor * texture(textureID, texCoord);
 	//outColor = texture(textureID, texCoord);
         //outColor = vec4(vertColor, 1.0);
 

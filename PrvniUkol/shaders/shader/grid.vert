@@ -1,6 +1,6 @@
 #version 150
 in vec2 inPosition; // input from the vertex buffer
-out vec3 vertColor; // output from this shader to the next pipeline stage
+out vec4 vertColor; // output from this shader to the next pipeline stage
 out vec3 vertNormal;
 out vec3 vertPosition;
 out vec2 texCoord;
@@ -74,7 +74,7 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     vec3 ambientLightCol = ambBarva;
     vec3 directLightCol = primBarva[cisloSvetla];
 
-    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
+    vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
     float difCoef = max(0, dot(normal, smerSvetla));
     float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
@@ -114,13 +114,13 @@ void main() {
     gl_Position = mat * vec4(position, 1.0);
 
     vertNormal = normal(inPosition);
-    vertColor = vec3(vertNormal)*0.5+0.5;
+    vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
     //vertColor = vec3(inPosition, 0.0);
     //vertColor = vec3(position);
     vertPosition = position;
     texCoord = mod(inPosition * 4,1);
     //vertColor = vec3(texCoord, 0.0);
-    vertColor = vec3(1.0);
+    vertColor = vec4(1.0);
 
 
     vec3 ambientSum = vec3(0);

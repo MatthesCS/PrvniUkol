@@ -139,7 +139,7 @@ public class Renderer implements GLEventListener, MouseListener,
         poziceOka = cam.getEye();
 
         poziceSvetel.add(new Vec3D(5, 5, -3));
-        poziceSvetel.add(new Vec3D(0, 0, 0));
+        poziceSvetel.add(new Vec3D(0, 0, 5));
         poziceSvetel.add(new Vec3D(0, 0, -5));
 
         svetlo = 0;
