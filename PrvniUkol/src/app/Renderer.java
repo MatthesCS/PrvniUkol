@@ -49,7 +49,7 @@ public class Renderer implements GLEventListener, MouseListener,
     Vec3D poziceOka, difuzniBarvaSvetla, specularniBarvaSvetla, ambientniBarvaSvetla;
     List<Vec3D> poziceSvetel = new ArrayList<>(), primeBarvySvetla = new ArrayList<>();
 
-    OGLTexture2D texture;
+    OGLTexture2D texture, textureNormal;
     OGLTexture2D.Viewer textureViewer;
 
     @Override
@@ -96,6 +96,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
 
         texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        textureNormal = new OGLTexture2D(gl, "/textures/bricksn.png");
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
@@ -211,7 +212,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
 
-        texture.bind(shaderProgram, "textureID", 0);
+        texture.bind(gridShaderProgram, "textura", 0);
+        textureNormal.bind(gridShaderProgram, "texturaNormal", 1);
 
         if (poly) {
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
@@ -220,6 +222,8 @@ public class Renderer implements GLEventListener, MouseListener,
         grid.draw(GL2GL3.GL_TRIANGLES, gridShaderProgram);
 
         //textureViewer.view(texture, -1, -1, 0.5);
+        //textureViewer.view(textureNormal, -1, -1, 0.5);
+        
         String text = new String(this.getClass().getName() + ": [LMB] camera, WSAD");
 
         textRenderer.drawStr2D(3, height - 20, text);

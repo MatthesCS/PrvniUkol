@@ -118,7 +118,7 @@ void main() {
     //vertColor = vec3(inPosition, 0.0);
     //vertColor = vec3(position);
     vertPosition = position;
-    texCoord = mod(inPosition * 4,1);
+    texCoord = mod(inPosition * 4,vec2(1.0, 1.0));
     //vertColor = vec3(texCoord, 0.0);
     vertColor = vec4(1.0);
 
