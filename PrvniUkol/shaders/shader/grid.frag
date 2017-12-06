@@ -19,7 +19,9 @@ uniform sampler2D texturaNormal;
 void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
-    vec3 normal = normalize(vertNormal);
+    vec3 puvodniNormala = normalize(vertNormal);
+    vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
+    vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
 
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
