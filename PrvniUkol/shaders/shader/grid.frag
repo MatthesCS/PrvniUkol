@@ -4,6 +4,8 @@ out vec4 outColor; // output from the fragment shader
 in vec3 vertNormal;
 in vec3 vertPosition;
 in vec2 texCoord;
+in vec3 tx;
+in vec3 ty;
 uniform vec3 oko;
 const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
@@ -20,14 +22,25 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
     vec3 puvodniNormala = normalize(vertNormal);
-    //vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
+
+    vec3 x = tx;
+    vec3 y = -ty;
+    vec3 z = normalize(x*y);
+    x = normalize(x);
+    y = z * x;
+    
     vec4 pom = texture(texturaNormal, texCoord);
-    vec3 normal = vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5));
-    normal = normalize(normal + puvodniNormala);
+    vec3 normal = normalize(vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5)));
+
+    mat3 TBN = mat3(x,y,z);
+    
+    //normal = normalize(normal + puvodniNormala);
     //vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
+
+    normal = normal * TBN;
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
@@ -53,7 +66,7 @@ void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
     vec3 position = vertPosition;
     vec3 puvodniNormala = normalize(vertNormal);
     vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
-    vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
+    vec3 normal = normalize(vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5)));
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);

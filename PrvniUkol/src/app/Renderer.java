@@ -41,6 +41,7 @@ public class Renderer implements GLEventListener, MouseListener,
     int shaderProgram, locMat, locSvetlo, locOko;
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
     int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva, gridLocLesklost;
+    int gridLocUtlumKonst, gridLocUtlumLin, gridLocUtlumKvadr;
     int svetlo, pocetBodu = 50;
     int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
     float lesklost;
@@ -48,6 +49,7 @@ public class Renderer implements GLEventListener, MouseListener,
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
     Vec3D poziceOka, difuzniBarvaSvetla, specularniBarvaSvetla, ambientniBarvaSvetla;
+    float konstatniUtlumSvetla, linearniUtlumSvetla, kvadratickyUtlumSvetla;
     List<Vec3D> poziceSvetel = new ArrayList<>(), primeBarvySvetla = new ArrayList<>();
 
     OGLTexture2D texture, textureNormal;
@@ -90,6 +92,10 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocSpecBarva = gl.glGetUniformLocation(gridShaderProgram, "specBarva");
         gridLocAmbBarva = gl.glGetUniformLocation(gridShaderProgram, "ambBarva");
         gridLocPrimBarva = gl.glGetUniformLocation(gridShaderProgram, "primBarva");
+        
+        gridLocUtlumKonst = gl.glGetUniformLocation(gridShaderProgram, "utlumKonst");
+        gridLocUtlumLin = gl.glGetUniformLocation(gridShaderProgram, "utlumLin");
+        gridLocUtlumKvadr = gl.glGetUniformLocation(gridShaderProgram, "utlumKvadr");                
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -154,6 +160,9 @@ public class Renderer implements GLEventListener, MouseListener,
         primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));//světlo
         primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));//světlo
         lesklost = 70.0f;
+        konstatniUtlumSvetla = 1;
+        linearniUtlumSvetla = 0.5f;
+        kvadratickyUtlumSvetla = 0;
         
         //měď
         /*ambientniBarvaSvetla = new Vec3D(0.01925, 0.0735, 0.0225);
@@ -228,6 +237,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocPrimBarva, primeBarvySvetla.size(), ToFloatArray.convert(primeBarvySvetla), 0);
         gl.glUniform1f(gridLocLesklost, lesklost);
+        gl.glUniform1f(gridLocUtlumKonst, konstatniUtlumSvetla);
+        gl.glUniform1f(gridLocUtlumLin, linearniUtlumSvetla);
+        gl.glUniform1f(gridLocUtlumKvadr, kvadratickyUtlumSvetla);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         

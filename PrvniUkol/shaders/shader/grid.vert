@@ -4,12 +4,17 @@ out vec4 vertColor; // output from this shader to the next pipeline stage
 out vec3 vertNormal;
 out vec3 vertPosition;
 out vec2 texCoord;
+out vec3 tx;
+out vec3 ty;
 uniform mat4 mat; // variable constant for all vertices in a single draw
 const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
 uniform vec3 oko;
 uniform float svetlo;
 uniform float lesklost;
+uniform float utlumKonst;
+uniform float utlumLin;
+uniform float utlumKvadr;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
@@ -56,9 +61,9 @@ vec3 normal(vec2 paramPos)
 {
     vec2 dx = vec2(DELTA, 0);
     vec2 dy = vec2(0, DELTA);
-	vec3 tx = surface(paramPos + dx) - surface(paramPos - dx);
-	vec3 ty = surface(paramPos + dy) - surface(paramPos - dy);
-	return normalize(cross(ty, tx));
+    tx = surface(paramPos + dx) - surface(paramPos - dx);
+    ty = surface(paramPos + dy) - surface(paramPos - dy);
+    return normalize(cross(ty, tx));
 }
 
 void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
@@ -66,7 +71,9 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
 
-    vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
+    vec3 smerSvetla = svetlaPozice[cisloSvetla] - position;
+    float vzdalenostSvetla = length(smerSvetla);
+    smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
 
     vec3 matDifCol = difBarva;
@@ -78,14 +85,16 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
 
     float difCoef = max(0, dot(normal, smerSvetla));
     float specCoef = 0.0;
+    float utlum = 1.0;
     if (difCoef > 0.0)
     {
         specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+        utlum = 1.0 / (utlumKonst + utlumLin * vzdalenostSvetla + utlumKvadr * vzdalenostSvetla * vzdalenostSvetla);
     }
 
     ambi = ambientLightCol * matDifCol;
-    diff = directLightCol * matDifCol * difCoef; 
-    spec = directLightCol * matSpecCol * specCoef;
+    diff = utlum * directLightCol * matDifCol * difCoef; 
+    spec = utlum * directLightCol * matSpecCol * specCoef;
 }
 
 void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
@@ -116,13 +125,13 @@ void main() {
     vec3 position = surface(inPosition);
     gl_Position = mat * vec4(position, 1.0);
 
-    texCoord = inPosition * 4;
+    texCoord = vec2(inPosition.x, -inPosition.y + 1) * 4;
 
     vertNormal = normal(inPosition);
-    vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
-    //vertColor = vec3(inPosition, 0.0);
-    //vertColor = vec3(position);
     vertPosition = position;
+    vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
+    //vertColor = vec4(inPosition, 0.0, 1.0);
+    //vertColor = vec3(position);
     //vertColor = vec4(texCoord, 0.0, 1.0);
     vertColor = vec4(1.0);
 
