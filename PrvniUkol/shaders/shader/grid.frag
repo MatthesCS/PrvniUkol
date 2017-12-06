@@ -23,7 +23,6 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
     vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
     vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
 
-
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
 
@@ -32,10 +31,14 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
     vec3 ambientLightCol = ambBarva;
     vec3 directLightCol = primBarva[cisloSvetla];
 
-    vec3 reflected = reflect(normalize(-smerSvetla), normal);
+    vec3 reflected = -reflect(smerSvetla, normal);
 
     float difCoef = max(0, dot(normal, smerSvetla));
-    float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+    float specCoef = 0;
+    if (difCoef > 0.0)
+    {
+        specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+    }
 
     ambi = ambientLightCol * matDifCol;
     diff = directLightCol * matDifCol * difCoef;

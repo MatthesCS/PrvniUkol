@@ -77,7 +77,11 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
     float difCoef = max(0, dot(normal, smerSvetla));
-    float specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+    float specCoef = 0.0;
+    if (difCoef > 0.0)
+    {
+        specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+    }
 
     ambi = ambientLightCol * matDifCol;
     diff = directLightCol * matDifCol * difCoef; 
