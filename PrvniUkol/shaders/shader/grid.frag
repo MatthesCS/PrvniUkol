@@ -20,8 +20,11 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
     vec3 puvodniNormala = normalize(vertNormal);
-    vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
-    vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
+    //vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + puvodniNormala;
+    vec4 pom = texture(texturaNormal, texCoord);
+    vec3 normal = vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5));
+    normal = normalize(normal + puvodniNormala);
+    //vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
