@@ -155,13 +155,19 @@ public class Renderer implements GLEventListener, MouseListener,
         primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));//světlo
         lestklost = 70.0;
         */
-        difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);
-        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);
-        ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);
-        lesklost = 70;
-        primeBarvySvetla.add(new Vec3D(0.09, 0.09, 0.99));
-        primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));
-        primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));
+        //měď
+        /*ambientniBarvaSvetla = new Vec3D(0.01925, 0.0735, 0.0225);
+        difuzniBarvaSvetla = new Vec3D(0.7038, 0.27048, 0.0828);
+        specularniBarvaSvetla = new Vec3D(0.256777, 0.137622, 0.086014);
+        lesklost = 12.8f;*/
+        
+        ambientniBarvaSvetla = new Vec3D(0.02, 0.02, 0.02);
+        difuzniBarvaSvetla = new Vec3D(0.01, 0.01, 0.01);
+        specularniBarvaSvetla = new Vec3D(0.4, 0.4, 0.4);
+        lesklost = 10f;
+        primeBarvySvetla.add(new Vec3D(1, 1, 1));
+        primeBarvySvetla.add(new Vec3D(1, 1, 1));
+        primeBarvySvetla.add(new Vec3D(1, 1, 1));
 
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++) {
