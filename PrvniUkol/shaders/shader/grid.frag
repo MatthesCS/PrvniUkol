@@ -8,6 +8,7 @@ uniform vec3 oko;
 const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
 uniform float svetlo;
+uniform float lesklost;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
@@ -23,7 +24,6 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
-    float lesklost = 70.0;
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
@@ -50,7 +50,6 @@ void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
-    float lesklost = 70.0;
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
@@ -72,7 +71,7 @@ void main() {
 	//outColor = vertColor * (texture(texturaNormal, texCoord) - texture(textura, texCoord)) * normal;
         outColor = vertColor * texture(textura, texCoord);
 	//outColor = texture(textureID, texCoord);
-        //outColor = vec4(vertColor, 1.0);
+        //outColor = vertColor;
 
 
         if(svetlo == 3.0 || svetlo == 4.0)

@@ -40,9 +40,10 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int shaderProgram, locMat, locSvetlo, locOko;
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
-    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva;
+    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva, gridLocLesklost;
     int svetlo, pocetBodu = 50;
     int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
+    float lesklost;
 
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
@@ -83,6 +84,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
         gridLocPoziceSvetel = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
+        gridLocLesklost = gl.glGetUniformLocation(gridShaderProgram, "lesklost");
 
         gridLocDifBarva = gl.glGetUniformLocation(gridShaderProgram, "difBarva");
         gridLocSpecBarva = gl.glGetUniformLocation(gridShaderProgram, "specBarva");
@@ -144,13 +146,22 @@ public class Renderer implements GLEventListener, MouseListener,
         poziceSvetel.add(new Vec3D(0, 0, -5));
 
         svetlo = 0;
-
+        /*
         difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
         ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);//odraz?
         primeBarvySvetla.add(new Vec3D(0.09, 0.09, 0.99));//světlo
         primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));//světlo
         primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));//světlo
+        lestklost = 70.0;
+        */
+        difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);
+        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);
+        ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);
+        lesklost = 70;
+        primeBarvySvetla.add(new Vec3D(0.09, 0.09, 0.99));
+        primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));
+        primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));
 
         int[] indexBufferData = new int[36];
         for (int i = 0; i < 6; i++) {
@@ -209,6 +220,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform3fv(gridLocDifBarva, 1, ToFloatArray.convert(difuzniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocPrimBarva, primeBarvySvetla.size(), ToFloatArray.convert(primeBarvySvetla), 0);
+        gl.glUniform1f(gridLocLesklost, lesklost);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
 

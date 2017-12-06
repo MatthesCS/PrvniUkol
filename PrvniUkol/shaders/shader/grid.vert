@@ -9,6 +9,7 @@ const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
 uniform vec3 oko;
 uniform float svetlo;
+uniform float lesklost;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
@@ -67,7 +68,6 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
 
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
-    float lesklost = 70.0;
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
@@ -92,7 +92,6 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, ou
     vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     vec3 smerOka = normalize(oko - position);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
-    float lesklost = 70.0;
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
@@ -113,15 +112,15 @@ void main() {
     vec3 position = surface(inPosition);
     gl_Position = mat * vec4(position, 1.0);
 
+    texCoord = mod(inPosition * 4,vec2(1.0, 1.0));
+
     vertNormal = normal(inPosition);
     vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
     //vertColor = vec3(inPosition, 0.0);
     //vertColor = vec3(position);
     vertPosition = position;
-    texCoord = mod(inPosition * 4,vec2(1.0, 1.0));
-    //vertColor = vec3(texCoord, 0.0);
+    //vertColor = vec4(texCoord, 0.0, 1.0);
     vertColor = vec4(1.0);
-
 
     vec3 ambientSum = vec3(0);
     vec3 diffuseSum = vec3(0);
