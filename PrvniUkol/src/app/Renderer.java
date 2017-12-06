@@ -230,6 +230,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1f(gridLocLesklost, lesklost);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
+        
+        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
+        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
 
         texture.bind(gridShaderProgram, "textura", 0);
         textureNormal.bind(gridShaderProgram, "texturaNormal", 1);
