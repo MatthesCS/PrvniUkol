@@ -25,7 +25,7 @@ public class Gui extends JFrame
     
     private JButton btPolymode;
     
-    private JComboBox<String> cbMaterialy;
+    private JComboBox<String> cbMaterialy, cbSvetlo;
     
     public Gui(Renderer renderer)
     {
@@ -61,9 +61,28 @@ public class Gui extends JFrame
             }
         });
         
+        String[] svetla = new String[] {"Žádné", "Lambert vertex sh.", "Phong vertex sh.", "Blinn-Phong vert.", 
+            "Ambientní složka vert.", "Difůzní složka vert.", "Speculární složka Phong v.",
+            "Speculární. složka Blinn-Phong v.", "Lambert fragment sh.", "Phong fragment sh.", "Blinn-Phong frag.", 
+            "Ambientní složka frag.", "Difůzní složka frag.", "Speculární složka Phong f.",
+            "Speculární. složka Blinn-Phong f."};
+        
+        cbSvetlo = new JComboBox<>(svetla);
+        cbSvetlo.setSelectedIndex(0);
+        cbSvetlo.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JComboBox cb = (JComboBox)e.getSource();
+                renderer.setSvetlo((Integer) cb.getSelectedIndex());
+            }
+        });
+        
         
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(btPolymode, "North");
+        getContentPane().add(cbSvetlo, "Center");
         getContentPane().add(cbMaterialy, "South");
         
         pack();

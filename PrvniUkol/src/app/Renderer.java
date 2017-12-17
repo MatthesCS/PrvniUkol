@@ -37,11 +37,6 @@ import javax.swing.SwingUtilities;
 public class Renderer implements GLEventListener, MouseListener,
         MouseMotionListener, KeyListener
 {
-
-    public static final int MATERIAL_DEFAULT = 0, MATERIAL_MED = 1, MATERIAL_CERNA_GUMA = 2, MATERIAL_CHROM = 3,
-            MATERIAL_ZLATO = 4, MATERIAL_EMERALD = 5, MATERIAL_RUBIN = 6, MATERIAL_TYRKYS = 7;
-    public static final int POCET_MATERIALU = 8;
-
     private int width, height, ox, oy;
 
     private OGLBuffers grid, svetloBuf;

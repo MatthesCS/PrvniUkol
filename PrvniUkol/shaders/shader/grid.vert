@@ -1,6 +1,15 @@
 #version 150
 const int POCETSVETEL = 3;
 const int POCETMATERIALU = 8;
+
+const int LAMBERTV = 1;
+const int PHONGV = 2;
+const int BLINNPHONGV = 3;
+const int AMBV = 4;
+const int DIFFV = 5;
+const int SPECPHONGV = 6;
+const int SPECBLINNPHONGV = 7;
+
 const float PI = 3.1415927;
 const float DELTA = 0.001;
 
@@ -73,7 +82,7 @@ mat3 tangentMat(vec2 paramPos)
     return mat3(x,y,z);
 }
 
-void phong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
+void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
@@ -83,6 +92,7 @@ void phong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec
     float vzdalenostSvetla = length(smerSvetla);
     smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
+    vec3 halfVektor = normalize(smerSvetla + smerOka);
 
     vec4 ambientLightCol = materialy[material][0];
     vec4 matDifCol = materialy[material][1];
@@ -98,45 +108,7 @@ void phong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec
     if (difCoef > 0.0)
     {
         specCoef = max(0, pow(dot(smerOka, reflected), lesk));
-        float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
-        if(podil > 0)
-        {
-            utlum /= podil;
-        }
-    }
-
-    ambi = ambientLightCol * matDifCol;
-    diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
-    spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
-}
-
-void blinnPhong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
-{
-    vec3 position = surface(paramPos);
-    vec3 normal = normal(paramPos);
-    vec3 utlumy = svetla[cisloSvetla][2];
-
-    vec3 smerSvetla = svetla[cisloSvetla][0] - position;
-    float vzdalenostSvetla = length(smerSvetla);
-    smerSvetla = normalize(smerSvetla);
-    
-    vec3 smerOka = normalize(oko - position);
-    vec3 halfVektor = normalize(smerSvetla + smerOka);
-
-    vec4 ambientLightCol = materialy[material][0];
-    vec4 matDifCol = materialy[material][1];
-    vec4 matSpecCol = materialy[material][2];
-    vec3 directLightCol = svetla[cisloSvetla][1];
-    float lesk = materialy[material][3].x;
-
-    vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
-
-    float difCoef = max(0, dot(normal, smerSvetla));
-
-    float specCoef = 0.0;
-    float utlum = 1.0;
-    if (difCoef > 0.0)
-    {
+        if(svetlo == BLINNPHONGV || svetlo == SPECBLINNPHONGV)
         specCoef = max(0, pow(dot(normal, halfVektor), lesk));
         float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
         if(podil > 0)
@@ -175,21 +147,44 @@ void main() {
     vec4 specSum = vec4(0);
     vec4 ambi, diff, spec;
 
-    if(svetlo == 1.0 || svetlo == 2.0)
+    if(svetlo >= LAMBERTV && svetlo <= SPECBLINNPHONGV)
     {
 	for( int i=0; i<POCETSVETEL; ++i )
         {
-            if(svetlo == 1.0){
-            phong(inPosition, i, ambi, diff, spec);
-            }
-            if(svetlo == 2.0){
-            blinnPhong(inPosition, i, ambi, diff, spec);
-            }
+            osvetleni(inPosition, i, ambi, diff, spec);
             ambientSum += ambi;
             diffuseSum += diff;
             specSum += spec;
         }
         ambientSum /= POCETSVETEL;
-        vertColor = ambientSum + diffuseSum + specSum;
+
+        if(svetlo == LAMBERTV)
+        {
+            vertColor = ambientSum + diffuseSum;
+        }
+        else if(svetlo == PHONGV)
+        {
+            vertColor = ambientSum + diffuseSum + specSum;
+        }
+        else if(svetlo == BLINNPHONGV)
+        {
+            vertColor = ambientSum + diffuseSum + specSum;
+        }
+        else if(svetlo == AMBV)
+        {
+            vertColor = ambientSum;
+        }
+        else if(svetlo == DIFFV)
+        {
+            vertColor = diffuseSum;
+        }
+        else if(svetlo == SPECPHONGV)
+        {
+            vertColor = specSum;
+        }
+        else if(svetlo == SPECBLINNPHONGV)
+        {
+            vertColor = specSum;
+        }
     }
 } 
