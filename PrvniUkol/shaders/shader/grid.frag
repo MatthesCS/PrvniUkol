@@ -1,4 +1,5 @@
 #version 150
+const int POCETSVETEL = 3;
 in vec4 vertColor; // input from the previous pipeline stage
 out vec4 outColor; // output from the fragment shader
 in vec3 vertNormal;
@@ -7,9 +8,8 @@ in vec2 texCoord;
 in vec3 tx;
 in vec3 ty;
 in vec3 eyeVec;  //normal
-in vec3 lightVec;  //normal
+in vec3 lightVec[POCETSVETEL];  //normal
 uniform vec3 oko;
-const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
 uniform float svetlo;
 uniform float lesklost;
@@ -28,7 +28,7 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 
     //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     //vec3 smerOka = normalize(oko - position);
-    vec3 smerSvetla = normalize(lightVec);
+    vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
     vec3 smerOka = normalize(eyeVec);
 
     vec3 matDifCol = difBarva;
@@ -56,7 +56,7 @@ void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 
     vec3 normal = texture(texturaNormal, texCoord).rgb * 2 -1;
 
-    vec3 smerSvetla = normalize(lightVec);
+    vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
     vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
@@ -89,7 +89,7 @@ void main() {
             vec3 diffuseSum = vec3(0);
             vec3 specSum = vec3(0);
             vec3 ambi, diff, spec;
-            for( int i=0; i<1; ++i )
+            for( int i=0; i<POCETSVETEL; ++i )
             {
                 if(svetlo == 3.0){
                 phong(i, ambi, diff, spec);
@@ -101,7 +101,7 @@ void main() {
                 diffuseSum += diff;
                 specSum += spec;
             }
-            ambientSum /= 1;
+            ambientSum /= POCETSVETEL;
             outColor = outColor * vec4(ambientSum + diffuseSum + specSum, 1.0);
         }
 } 

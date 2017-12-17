@@ -1,15 +1,17 @@
 #version 150
+const int POCETSVETEL = 3;
+const float PI = 3.1415927;
+const float DELTA = 0.001;
 in vec2 inPosition; // input from the vertex buffer
 out vec4 vertColor; // output from this shader to the next pipeline stage
 out vec3 vertNormal; //prej ne
 out vec3 eyeVec;  //normal
-out vec3 lightVec;  //normal
+out vec3 lightVec[POCETSVETEL];  //normal
 out vec3 vertPosition;
 out vec2 texCoord;
 out vec3 tx;
 out vec3 ty;
 uniform mat4 mat; // variable constant for all vertices in a single draw
-const int POCETSVETEL = 3;
 uniform vec3 svetlaPozice[POCETSVETEL];
 uniform vec3 oko;
 uniform float svetlo;
@@ -21,9 +23,6 @@ uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
 uniform vec3 primBarva[POCETSVETEL];
-
-const float PI = 3.1415927;
-const float DELTA = 0.001;
 
 vec3 desk(vec2 paramPos)
 {
@@ -157,12 +156,15 @@ void main() {
 
     mat3 tanMat = tangentMat(inPosition);
     eyeVec = (oko - vertPosition)* tanMat;
-    lightVec = (svetlaPozice[0] - vertPosition) * tanMat;
+    for(int i=0; i< POCETSVETEL; i++)
+    {
+    lightVec[i] = (svetlaPozice[i] - vertPosition) * tanMat;
+    }
 
 
     if(svetlo == 1.0 || svetlo == 2.0)
     {
-	for( int i=0; i<1; ++i )
+	for( int i=0; i<POCETSVETEL; ++i )
         {
             if(svetlo == 1.0){
             phong(inPosition, i, ambi, diff, spec);
@@ -174,7 +176,7 @@ void main() {
             diffuseSum += diff;
             specSum += spec;
         }
-    ambientSum /= 1;
+    ambientSum /= POCETSVETEL;
     vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
      }
 } 
