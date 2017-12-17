@@ -22,6 +22,9 @@ import transforms.Point3D;
 import transforms.Vec3D;
 import utils.MeshGenerator;
 
+import gui.*;
+import javax.swing.SwingUtilities;
+
 /**
  * GLSL sample:<br/>
  * Draw 3D geometry, use camera and projection transformations<br/>
@@ -32,31 +35,43 @@ import utils.MeshGenerator;
  * @since 2015-09-05
  */
 public class Renderer implements GLEventListener, MouseListener,
-        MouseMotionListener, KeyListener {
+        MouseMotionListener, KeyListener
+{
 
-    int width, height, ox, oy;
+    public static final int MATERIAL_DEFAULT = 0, MATERIAL_MED = 1, MATERIAL_CERNA_GUMA = 2, MATERIAL_CHROM = 3,
+            MATERIAL_ZLATO = 4, MATERIAL_EMERALD = 5, MATERIAL_RUBIN = 6, MATERIAL_TYRKYS = 7;
+    public static final int POCET_MATERIALU = 8;
 
-    OGLBuffers grid, svetloBuf;
-    OGLTextRenderer textRenderer;
-    boolean poly = false;
+    private int width, height, ox, oy;
 
-    int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
-    int gridLocSvetla, gridLocMaterialy;
-    int svetlo, pocetBodu = 50;
-    int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
+    private OGLBuffers grid, svetloBuf;
+    private OGLTextRenderer textRenderer;
+    private boolean poly = false;
 
-    Camera cam = new Camera();
-    Mat4 proj; // created in reshape()
-    Vec3D poziceOka;
-    List<Mat3> svetla = new ArrayList<>();
-    List<Mat4> materialy = new ArrayList<>();
+    private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
+    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial;
+    private int svetlo, material = 0, pocetBodu = 50;
+    private int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
 
-    OGLTexture2D texture, textureNormal;
-    OGLTexture2D.Viewer textureViewer;
+    private Camera cam = new Camera();
+    private Mat4 proj; // created in reshape()
+    private Vec3D poziceOka;
+    private List<Mat3> svetla = new ArrayList<>();
+    private List<Mat4> materialy = new ArrayList<>();
+
+    private OGLTexture2D texture, textureNormal;
+    private OGLTexture2D.Viewer textureViewer;
 
     @Override
-    public void init(GLAutoDrawable glDrawable) {
+    public void init(GLAutoDrawable glDrawable)
+    {
         // check whether shaders are supported
+        SwingUtilities.invokeLater(()
+                -> 
+                {
+                    new Gui(this).setVisible(true);
+        });
+
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         OGLUtils.shaderCheck(gl);
 
@@ -79,9 +94,10 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-        
-        gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");  
-        gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");  
+
+        gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");
+        gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");
+        gridLocMaterial = gl.glGetUniformLocation(gridShaderProgram, "material");
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -94,15 +110,16 @@ public class Renderer implements GLEventListener, MouseListener,
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
-    void createBuffers(GL2GL3 gl) {
+    void createBuffers(GL2GL3 gl)
+    {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
 
         poziceOka = cam.getEye();
-        
+
         svetla.add(new Mat3(
                 new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(1, 1, 1),  //barva světla
+                new Vec3D(1, 1, 1), //barva světla
                 new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
         ));
         svetla.add(new Mat3(
@@ -115,61 +132,62 @@ public class Renderer implements GLEventListener, MouseListener,
                 new Vec3D(1, 1, 1),
                 new Vec3D(0, 0, 0)
         ));
-        
-        materialy.add(new Mat4(  //vlastní 0
+
+        materialy.add(new Mat4( //vlastní 0
                 new Point3D(0.2, 0.2, 0.2), //ambientní barva
                 new Point3D(0.7, 0.7, 0.7), //difůzní barva
                 new Point3D(1.0, 1.0, 1.0), //speculární barva
-                new Point3D(70.0, 0, 0)        //lesklost a 3x nic
+                new Point3D(70.0, 0, 0) //lesklost a 3x nic
         ));
-        materialy.add(new Mat4(  //měď 1
+        materialy.add(new Mat4( //měď 1
                 new Point3D(0.01925, 0.0735, 0.0225),
                 new Point3D(0.7038, 0.27048, 0.0828),
                 new Point3D(0.256777, 0.137622, 0.086014),
-                new Point3D(12.8, 0, 0, 0)       
+                new Point3D(12.8, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //černá guma 2
+        materialy.add(new Mat4( //černá guma 2
                 new Point3D(0.02, 0.02, 0.02),
                 new Point3D(0.01, 0.01, 0.01),
                 new Point3D(0.4, 0.4, 0.4),
-                new Point3D(10, 0, 0, 0)       
+                new Point3D(10, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //chrom 3
+        materialy.add(new Mat4( //chrom 3
                 new Point3D(0.25, 0.25, 0.25),
                 new Point3D(0.4, 0.4, 0.4),
                 new Point3D(0.774597, 0.774597, 0.774597),
-                new Point3D(76.8, 0, 0, 0)       
+                new Point3D(76.8, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //leštěné zlato 4
+        materialy.add(new Mat4( //leštěné zlato 4
                 new Point3D(0.24725, 0.1995, 0.0745),
                 new Point3D(0.75164, 0.60648, 0.22648),
                 new Point3D(0.628281, 0.555802, 0.366065),
-                new Point3D(51.2, 0, 0, 0)       
+                new Point3D(51.2, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //emerald 5
+        materialy.add(new Mat4( //emerald 5
                 new Point3D(0.0215, 0.1745, 0.0215, 0.55),
                 new Point3D(0.07568, 0.61424, 0.07568, 0.55),
                 new Point3D(0.633, 0.727811, 0.633, 0.55),
-                new Point3D(76.8, 0, 0, 0)       
+                new Point3D(76.8, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //rubín 6
+        materialy.add(new Mat4( //rubín 6
                 new Point3D(0.1745, 0.01175, 0.01175, 0.55),
                 new Point3D(0.61424, 0.04136, 0.04136, 0.55),
                 new Point3D(0.727811, 0.626959, 0.626959, 0.55),
-                new Point3D(76.8, 0, 0, 0)       
+                new Point3D(76.8, 0, 0, 0)
         ));
-        materialy.add(new Mat4(  //tyrkys 7
+        materialy.add(new Mat4( //tyrkys 7
                 new Point3D(0.1, 0.18725, 0.1745, 0.8),
                 new Point3D(0.396, 0.74151, 0.69102, 0.8),
                 new Point3D(0.297254, 0.30829, 0.306678, 0.8),
-                new Point3D(12.8, 0, 0, 0)       
+                new Point3D(12.8, 0, 0, 0)
         ));
 
         svetlo = 0;
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public void display(GLAutoDrawable glDrawable)
+    {
 
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, glDrawable.getGL().getGL2GL3(), "inPosition");
         poziceOka = cam.getEye();
@@ -178,7 +196,8 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
 
-        for (int i = 0; i < svetla.size(); i++) {
+        for (int i = 0; i < svetla.size(); i++)
+        {
             gl.glUseProgram(svetloShaderProgram);
             gl.glUniformMatrix4fv(locSvetloMat, 1, false,
                     ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
@@ -196,14 +215,16 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(gridLocMaterialy, materialy.size(), false, ToFloatArray.convert(materialy), 0);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
-        
+        gl.glUniform1i(gridLocMaterial, material);
+
         gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
         gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
 
         texture.bind(gridShaderProgram, "textura", 0);
         textureNormal.bind(gridShaderProgram, "texturaNormal", 1);
 
-        if (poly) {
+        if (poly)
+        {
             gl.glPolygonMode(GL2GL3.GL_FRONT_AND_BACK, GL2GL3.GL_LINE);
         }
 
@@ -211,7 +232,6 @@ public class Renderer implements GLEventListener, MouseListener,
 
         //textureViewer.view(texture, -1, -1, 0.5);
         //textureViewer.view(textureNormal, -1, -1, 0.5);
-        
         String text = new String(this.getClass().getName() + ": [LMB] camera, WSAD");
 
         textRenderer.drawStr2D(3, height - 20, text);
@@ -220,7 +240,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width,
-            int height) {
+            int height)
+    {
         this.width = width;
         this.height = height;
         proj = new Mat4PerspRH(Math.PI / 4, height / (double) width, 0.01, 1000.0);
@@ -228,29 +249,35 @@ public class Renderer implements GLEventListener, MouseListener,
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
+    public void mouseClicked(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
+    public void mouseEntered(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseExited(MouseEvent e) {
+    public void mouseExited(MouseEvent e)
+    {
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
+    public void mousePressed(MouseEvent e)
+    {
         ox = e.getX();
         oy = e.getY();
     }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
+    public void mouseReleased(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseDragged(MouseEvent e) {
+    public void mouseDragged(MouseEvent e)
+    {
         cam = cam.addAzimuth((double) Math.PI * (ox - e.getX()) / width)
                 .addZenith((double) Math.PI * (e.getY() - oy) / width);
         ox = e.getX();
@@ -258,12 +285,15 @@ public class Renderer implements GLEventListener, MouseListener,
     }
 
     @Override
-    public void mouseMoved(MouseEvent e) {
+    public void mouseMoved(MouseEvent e)
+    {
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
+    public void keyPressed(KeyEvent e)
+    {
+        switch (e.getKeyCode())
+        {
             case KeyEvent.VK_W:
             case KeyEvent.VK_UP:
                 cam = cam.forward(1);
@@ -300,17 +330,20 @@ public class Renderer implements GLEventListener, MouseListener,
                 break;
             case KeyEvent.VK_L:
                 svetlo++;
-                if (svetlo > 4) {
+                if (svetlo > 4)
+                {
                     svetlo = 0;
                 }
                 break;
             case KeyEvent.VK_NUMPAD9:
-                if (pocetBodu < 100) {
+                if (pocetBodu < 100)
+                {
                     pocetBodu++;
                 }
                 break;
             case KeyEvent.VK_NUMPAD8:
-                if (pocetBodu > 4) {
+                if (pocetBodu > 4)
+                {
                     pocetBodu--;
                 }
                 break;
@@ -319,17 +352,49 @@ public class Renderer implements GLEventListener, MouseListener,
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(KeyEvent e)
+    {
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {
+    public void keyTyped(KeyEvent e)
+    {
     }
 
     @Override
-    public void dispose(GLAutoDrawable glDrawable) {
+    public void dispose(GLAutoDrawable glDrawable)
+    {
         glDrawable.getGL().getGL2GL3().glDeleteProgram(gridShaderProgram);
         glDrawable.getGL().getGL2GL3().glDeleteProgram(svetloShaderProgram);
     }
 
+    public int getSvetlo()
+    {
+        return svetlo;
+    }
+
+    public void setSvetlo(int svetlo)
+    {
+        this.svetlo = svetlo;
+    }
+
+    public boolean isPoly()
+    {
+        return poly;
+    }
+
+    public void setPoly(boolean poly)
+    {
+        this.poly = poly;
+    }
+
+    public int getMaterial()
+    {
+        return material;
+    }
+
+    public void setMaterial(int material)
+    {
+        this.material = material;
+    }
 }

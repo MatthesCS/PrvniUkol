@@ -1,6 +1,5 @@
 package app;
 
-
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLCanvas;
@@ -14,6 +13,7 @@ import javax.swing.SwingUtilities;
 
 public class JOGLApp
 {
+
     private static final int FPS = 60; // animator's target frames per second
 
     public void start()
@@ -36,11 +36,9 @@ public class JOGLApp
             canvas.addKeyListener(ren);
             canvas.setSize(512, 384);
 
-
             testFrame.add(canvas);
 
             //shutdown the program on windows close event
-
             //final Animator animator = new Animator(canvas);
             final FPSAnimator animator = new FPSAnimator(canvas, FPS, true);
 
@@ -68,9 +66,7 @@ public class JOGLApp
             testFrame.setVisible(true);
             animator.start(); // start the animation loop
 
-
-        }
-        catch (Exception e)
+        } catch (Exception e)
         {
             e.printStackTrace();
         }

@@ -1,7 +1,6 @@
 #version 150
 const int POCETSVETEL = 3;
 const int POCETMATERIALU = 8;
-const int MATROS = 7;
 const float PI = 3.1415927;
 const float DELTA = 0.001;
 
@@ -16,6 +15,7 @@ uniform mat3 svetla[POCETSVETEL];
 uniform mat4 materialy[POCETMATERIALU];
 uniform vec3 oko;
 uniform float svetlo;
+uniform int material;
 
 vec3 desk(vec2 paramPos)
 {
@@ -84,11 +84,11 @@ void phong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec
     smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
 
-    vec4 ambientLightCol = materialy[MATROS][0];
-    vec4 matDifCol = materialy[MATROS][1];
-    vec4 matSpecCol = materialy[MATROS][2];
+    vec4 ambientLightCol = materialy[material][0];
+    vec4 matDifCol = materialy[material][1];
+    vec4 matSpecCol = materialy[material][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
-    float lesk = materialy[MATROS][3].x;
+    float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
@@ -123,11 +123,11 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, ou
     vec3 smerOka = normalize(oko - position);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
-    vec4 ambientLightCol = materialy[MATROS][0];
-    vec4 matDifCol = materialy[MATROS][1];
-    vec4 matSpecCol = materialy[MATROS][2];
+    vec4 ambientLightCol = materialy[material][0];
+    vec4 matDifCol = materialy[material][1];
+    vec4 matSpecCol = materialy[material][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
-    float lesk = materialy[MATROS][3].x;
+    float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
 

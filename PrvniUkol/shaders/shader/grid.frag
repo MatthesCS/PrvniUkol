@@ -1,7 +1,6 @@
 #version 150
 const int POCETSVETEL = 3;
 const int POCETMATERIALU = 8;
-const int MATROS = 7;
 
 in vec4 vertColor; // input from the previous pipeline stage
 in vec3 vertPosition;
@@ -15,6 +14,7 @@ uniform vec3 oko;
 uniform mat3 svetla[POCETSVETEL];
 uniform mat4 materialy[POCETMATERIALU];
 uniform float svetlo;
+uniform int material;
 uniform sampler2D textura;
 uniform sampler2D texturaNormal;
 
@@ -31,11 +31,11 @@ void phong(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     float vzdalenostSvetla = length(svetla[cisloSvetla][0] - position);
     vec3 smerOka = normalize(eyeVec);
 
-    vec4 ambientLightCol = materialy[MATROS][0];
-    vec4 matDifCol = materialy[MATROS][1];
-    vec4 matSpecCol = materialy[MATROS][2];
+    vec4 ambientLightCol = materialy[material][0];
+    vec4 matDifCol = materialy[material][1];
+    vec4 matSpecCol = materialy[material][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
-    float lesk = materialy[MATROS][3].x;
+    float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
@@ -69,11 +69,11 @@ void blinnPhong(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
-    vec4 ambientLightCol = materialy[MATROS][0];
-    vec4 matDifCol = materialy[MATROS][1];
-    vec4 matSpecCol = materialy[MATROS][2];
+    vec4 ambientLightCol = materialy[material][0];
+    vec4 matDifCol = materialy[material][1];
+    vec4 matSpecCol = materialy[material][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
-    float lesk = materialy[MATROS][3].x;
+    float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
