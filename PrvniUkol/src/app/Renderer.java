@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import transforms.Camera;
+import transforms.Mat3;
 import transforms.Mat4;
 import transforms.Mat4PerspRH;
 import transforms.Vec3D;
@@ -38,9 +39,9 @@ public class Renderer implements GLEventListener, MouseListener,
     OGLTextRenderer textRenderer;
     boolean poly = false;
 
-    int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
-    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva, gridLocLesklost;
-    int gridLocUtlumKonst, gridLocUtlumLin, gridLocUtlumKvadr;
+    int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
+    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocLesklost;
+    int gridLocSvetla;
     int svetlo, pocetBodu = 50;
     int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
     float lesklost;
@@ -48,8 +49,7 @@ public class Renderer implements GLEventListener, MouseListener,
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
     Vec3D poziceOka, difuzniBarvaSvetla, specularniBarvaSvetla, ambientniBarvaSvetla;
-    float konstatniUtlumSvetla, linearniUtlumSvetla, kvadratickyUtlumSvetla;
-    List<Vec3D> poziceSvetel = new ArrayList<>(), primeBarvySvetla = new ArrayList<>();
+    List<Mat3> svetla = new ArrayList<>();
 
     OGLTexture2D texture, textureNormal;
     OGLTexture2D.Viewer textureViewer;
@@ -79,17 +79,13 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-        gridLocPoziceSvetel = gl.glGetUniformLocation(gridShaderProgram, "svetlaPozice");
         gridLocLesklost = gl.glGetUniformLocation(gridShaderProgram, "lesklost");
 
         gridLocDifBarva = gl.glGetUniformLocation(gridShaderProgram, "difBarva");
         gridLocSpecBarva = gl.glGetUniformLocation(gridShaderProgram, "specBarva");
         gridLocAmbBarva = gl.glGetUniformLocation(gridShaderProgram, "ambBarva");
-        gridLocPrimBarva = gl.glGetUniformLocation(gridShaderProgram, "primBarva");
         
-        gridLocUtlumKonst = gl.glGetUniformLocation(gridShaderProgram, "utlumKonst");
-        gridLocUtlumLin = gl.glGetUniformLocation(gridShaderProgram, "utlumLin");
-        gridLocUtlumKvadr = gl.glGetUniformLocation(gridShaderProgram, "utlumKvadr");                
+        gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");  
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -107,23 +103,30 @@ public class Renderer implements GLEventListener, MouseListener,
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
 
         poziceOka = cam.getEye();
-
-        poziceSvetel.add(new Vec3D(5, 5, -3));
-        poziceSvetel.add(new Vec3D(0, 0, 5));
-        poziceSvetel.add(new Vec3D(0, 0, -5));
+        
+        svetla.add(new Mat3(
+                new Vec3D(5, 5, -3), //pozice světla
+                new Vec3D(0, 0, 1),  //barva světla
+                new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
+        ));
+        svetla.add(new Mat3(
+                new Vec3D(0, 0, 5),
+                new Vec3D(1, 0, 0),
+                new Vec3D(0, 0, 0)
+        ));
+        svetla.add(new Mat3(
+                new Vec3D(0, 0, -5),
+                new Vec3D(0, 1, 0),
+                new Vec3D(0, 0, 0)
+        ));
+        
 
         svetlo = 0;
         
         difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
         ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);//odraz?
-        primeBarvySvetla.add(new Vec3D(1, 1, 0));//světlo
-        primeBarvySvetla.add(new Vec3D(1, 0, 0));//světlo
-        primeBarvySvetla.add(new Vec3D(0, 1, 0));//světlo
         lesklost = 70.0f;
-        konstatniUtlumSvetla = 1;
-        linearniUtlumSvetla = 0.5f;
-        kvadratickyUtlumSvetla = 0;
         
         //měď
         /*ambientniBarvaSvetla = new Vec3D(0.01925, 0.0735, 0.0225);
@@ -151,12 +154,12 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
 
-        for (int i = 0; i < poziceSvetel.size(); i++) {
+        for (int i = 0; i < svetla.size(); i++) {
             gl.glUseProgram(svetloShaderProgram);
             gl.glUniformMatrix4fv(locSvetloMat, 1, false,
                     ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-            gl.glUniform3fv(locSvetloBarva, 1, ToFloatArray.convert(primeBarvySvetla.get(i)), 0);
-            gl.glUniform3fv(locSvetloPozice, 1, ToFloatArray.convert(poziceSvetel.get(i)), 0);
+            gl.glUniform3fv(locSvetloBarva, 1, ToFloatArray.convert(svetla.get(i).getRow(1)), 0);
+            gl.glUniform3fv(locSvetloPozice, 1, ToFloatArray.convert(svetla.get(i).getRow(0)), 0);
 
             svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
         }
@@ -165,15 +168,11 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
-        gl.glUniform3fv(gridLocPoziceSvetel, poziceSvetel.size(), ToFloatArray.convert(poziceSvetel), 0);
         gl.glUniform3fv(gridLocAmbBarva, 1, ToFloatArray.convert(ambientniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocDifBarva, 1, ToFloatArray.convert(difuzniBarvaSvetla), 0);
         gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
-        gl.glUniform3fv(gridLocPrimBarva, primeBarvySvetla.size(), ToFloatArray.convert(primeBarvySvetla), 0);
         gl.glUniform1f(gridLocLesklost, lesklost);
-        gl.glUniform1f(gridLocUtlumKonst, konstatniUtlumSvetla);
-        gl.glUniform1f(gridLocUtlumLin, linearniUtlumSvetla);
-        gl.glUniform1f(gridLocUtlumKvadr, kvadratickyUtlumSvetla);
+        gl.glUniformMatrix3fv(gridLocSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         

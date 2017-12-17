@@ -2,27 +2,21 @@
 const int POCETSVETEL = 3;
 const float PI = 3.1415927;
 const float DELTA = 0.001;
-in vec2 inPosition; // input from the vertex buffer
-out vec4 vertColor; // output from this shader to the next pipeline stage
-out vec3 vertNormal; //prej ne
-out vec3 eyeVec;  //normal
-out vec3 lightVec[POCETSVETEL];  //normal
+
+in vec2 inPosition;
+out vec4 vertColor;
+out vec3 eyeVec;
+out vec3 lightVec[POCETSVETEL];
 out vec3 vertPosition;
 out vec2 texCoord;
-out vec3 tx;
-out vec3 ty;
-uniform mat4 mat; // variable constant for all vertices in a single draw
-uniform vec3 svetlaPozice[POCETSVETEL];
+uniform mat4 mat; 
+uniform mat3 svetla[POCETSVETEL];
 uniform vec3 oko;
 uniform float svetlo;
 uniform float lesklost;
-uniform float utlumKonst;
-uniform float utlumLin;
-uniform float utlumKvadr;
 uniform vec3 ambBarva;
 uniform vec3 difBarva;
 uniform vec3 specBarva;
-uniform vec3 primBarva[POCETSVETEL];
 
 vec3 desk(vec2 paramPos)
 {
@@ -62,8 +56,8 @@ vec3 normal(vec2 paramPos)
 {
     vec2 dx = vec2(DELTA, 0);
     vec2 dy = vec2(0, DELTA);
-    tx = surface(paramPos + dx) - surface(paramPos - dx);
-    ty = surface(paramPos + dy) - surface(paramPos - dy);
+    vec3 tx = surface(paramPos + dx) - surface(paramPos - dx);
+    vec3 ty = surface(paramPos + dy) - surface(paramPos - dy);
     return normalize(cross(ty, tx));
 }
 
@@ -71,8 +65,8 @@ mat3 tangentMat(vec2 paramPos)
 {
     vec2 dx = vec2(DELTA, 0);
     vec2 dy = vec2(0, DELTA);
-    tx = surface(paramPos + dx) - surface(paramPos - dx);
-    ty = surface(paramPos + dy) - surface(paramPos - dy);
+    vec3 tx = surface(paramPos + dx) - surface(paramPos - dx);
+    vec3 ty = surface(paramPos + dy) - surface(paramPos - dy);
     vec3 x = normalize(tx);
     vec3 y = normalize(-ty);
     vec3 z = cross(x,y);
@@ -84,8 +78,9 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
+    vec3 utlumy = svetla[cisloSvetla][2];
 
-    vec3 smerSvetla = svetlaPozice[cisloSvetla] - position;
+    vec3 smerSvetla = svetla[cisloSvetla][0] - position;
     float vzdalenostSvetla = length(smerSvetla);
     smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
@@ -93,7 +88,7 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
     vec3 ambientLightCol = ambBarva;
-    vec3 directLightCol = primBarva[cisloSvetla];
+    vec3 directLightCol = svetla[cisloSvetla][1];
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
@@ -103,7 +98,11 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     if (difCoef > 0.0)
     {
         specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
-        utlum = 1.0 / (utlumKonst + utlumLin * vzdalenostSvetla + utlumKvadr * vzdalenostSvetla * vzdalenostSvetla);
+        float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
+        if(podil > 0)
+        {
+            utlum /= podil;
+        }
     }
 
     ambi = ambientLightCol * matDifCol;
@@ -115,24 +114,39 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, ou
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
+    vec3 utlumy = svetla[cisloSvetla][2];
 
-    vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
+    vec3 smerSvetla = svetla[cisloSvetla][0] - position;
+    float vzdalenostSvetla = length(smerSvetla);
+    smerSvetla = normalize(smerSvetla);
+    
     vec3 smerOka = normalize(oko - position);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
     vec3 matDifCol = difBarva;
     vec3 matSpecCol = specBarva;
     vec3 ambientLightCol = ambBarva;
-    vec3 directLightCol = primBarva[cisloSvetla];
+    vec3 directLightCol = svetla[cisloSvetla][1];
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
 
     float difCoef = max(0, dot(normal, smerSvetla));
-    float specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+
+    float specCoef = 0.0;
+    float utlum = 1.0;
+    if (difCoef > 0.0)
+    {
+        specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+        float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
+        if(podil > 0)
+        {
+            utlum /= podil;
+        }
+    }
 
     ambi = ambientLightCol * matDifCol;
-    diff = directLightCol * matDifCol * difCoef;
-    spec = directLightCol * matSpecCol * specCoef;
+    diff = utlum * directLightCol * matDifCol * difCoef; 
+    spec = utlum * directLightCol * matSpecCol * specCoef;
 }
 
 void main() {
@@ -141,9 +155,8 @@ void main() {
 
     texCoord = vec2(inPosition.x, -inPosition.y + 1) * 4;
 
-    vertNormal = normal(inPosition);
     vertPosition = position;
-    vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
+    //vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
     //vertColor = vec4(inPosition, 0.0, 1.0);
     //vertColor = vec3(position);
     //vertColor = vec4(texCoord, 0.0, 1.0);
@@ -158,7 +171,7 @@ void main() {
     eyeVec = (oko - vertPosition)* tanMat;
     for(int i=0; i< POCETSVETEL; i++)
     {
-    lightVec[i] = (svetlaPozice[i] - vertPosition) * tanMat;
+        lightVec[i] = (svetla[i][0] - vertPosition) * tanMat;
     }
 
 
@@ -176,7 +189,7 @@ void main() {
             diffuseSum += diff;
             specSum += spec;
         }
-    ambientSum /= POCETSVETEL;
-    vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
-     }
+        ambientSum /= POCETSVETEL;
+        vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
+    }
 } 
