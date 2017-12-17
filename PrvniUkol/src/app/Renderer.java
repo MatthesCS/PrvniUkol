@@ -156,7 +156,7 @@ public class Renderer implements GLEventListener, MouseListener,
         difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);//co sežere matroš
         specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
         ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);//odraz?
-        primeBarvySvetla.add(new Vec3D(0.09, 0.09, 0.99));//světlo
+        primeBarvySvetla.add(new Vec3D(1, 1, 1));//světlo
         primeBarvySvetla.add(new Vec3D(0.99, 0.09, 0.09));//světlo
         primeBarvySvetla.add(new Vec3D(0.09, 0.99, 0.09));//světlo
         lesklost = 70.0f;

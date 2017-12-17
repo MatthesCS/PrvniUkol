@@ -1,7 +1,9 @@
 #version 150
 in vec2 inPosition; // input from the vertex buffer
 out vec4 vertColor; // output from this shader to the next pipeline stage
-out vec3 vertNormal;
+out vec3 vertNormal; //prej ne
+out vec3 eyeVec;  //normal
+out vec3 lightVec;  //normal
 out vec3 vertPosition;
 out vec2 texCoord;
 out vec3 tx;
@@ -64,6 +66,19 @@ vec3 normal(vec2 paramPos)
     tx = surface(paramPos + dx) - surface(paramPos - dx);
     ty = surface(paramPos + dy) - surface(paramPos - dy);
     return normalize(cross(ty, tx));
+}
+
+mat3 tangentMat(vec2 paramPos)
+{
+    vec2 dx = vec2(DELTA, 0);
+    vec2 dy = vec2(0, DELTA);
+    tx = surface(paramPos + dx) - surface(paramPos - dx);
+    ty = surface(paramPos + dy) - surface(paramPos - dy);
+    vec3 x = normalize(tx);
+    vec3 y = normalize(-ty);
+    vec3 z = cross(x,y);
+    x = cross(y,z);
+    return mat3(x,y,z);
 }
 
 void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
@@ -140,9 +155,14 @@ void main() {
     vec3 specSum = vec3(0);
     vec3 ambi, diff, spec;
 
+    mat3 tanMat = tangentMat(inPosition);
+    eyeVec = (oko - vertPosition)* tanMat;
+    lightVec = (svetlaPozice[0] - vertPosition) * tanMat;
+
+
     if(svetlo == 1.0 || svetlo == 2.0)
     {
-	for( int i=0; i<POCETSVETEL; ++i )
+	for( int i=0; i<1; ++i )
         {
             if(svetlo == 1.0){
             phong(inPosition, i, ambi, diff, spec);
