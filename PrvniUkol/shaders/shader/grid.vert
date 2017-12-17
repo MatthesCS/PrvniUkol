@@ -174,7 +174,7 @@ void main() {
             diffuseSum += diff;
             specSum += spec;
         }
-    ambientSum /= POCETSVETEL;
+    ambientSum /= 1;
     vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
      }
 } 

@@ -34,11 +34,10 @@ public class Renderer implements GLEventListener, MouseListener,
 
     int width, height, ox, oy;
 
-    OGLBuffers buffers, grid, svetloBuf;
+    OGLBuffers grid, svetloBuf;
     OGLTextRenderer textRenderer;
-    boolean poly = false, k = true;
+    boolean poly = false;
 
-    int shaderProgram, locMat, locSvetlo, locOko;
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocPoziceSvetel;
     int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocPrimBarva, gridLocLesklost;
     int gridLocUtlumKonst, gridLocUtlumLin, gridLocUtlumKvadr;
@@ -69,7 +68,6 @@ public class Renderer implements GLEventListener, MouseListener,
 
         textRenderer = new OGLTextRenderer(gl, glDrawable.getSurfaceWidth(), glDrawable.getSurfaceHeight());
 
-        shaderProgram = ShaderUtils.loadProgram(gl, "/shader/simple");
         gridShaderProgram = ShaderUtils.loadProgram(gl, "/shader/grid");
         svetloShaderProgram = ShaderUtils.loadProgram(gl, "/shader/svetlo");
         createBuffers(gl);
@@ -77,10 +75,6 @@ public class Renderer implements GLEventListener, MouseListener,
         locSvetloMat = gl.glGetUniformLocation(svetloShaderProgram, "mat");
         locSvetloPozice = gl.glGetUniformLocation(svetloShaderProgram, "pozice");
         locSvetloBarva = gl.glGetUniformLocation(svetloShaderProgram, "barva");
-
-        locMat = gl.glGetUniformLocation(shaderProgram, "mat");
-        locSvetlo = gl.glGetUniformLocation(shaderProgram, "svetlo");
-        locOko = gl.glGetUniformLocation(shaderProgram, "oko");
 
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
@@ -111,39 +105,6 @@ public class Renderer implements GLEventListener, MouseListener,
     void createBuffers(GL2GL3 gl) {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
-        float[] cube
-                = {
-                    // bottom (z-) face
-                    1, 0, 0, 0, 0, -1,
-                    0, 0, 0, 0, 0, -1,
-                    1, 1, 0, 0, 0, -1,
-                    0, 1, 0, 0, 0, -1,
-                    // top (z+) face
-                    1, 0, 1, 0, 0, 1,
-                    0, 0, 1, 0, 0, 1,
-                    1, 1, 1, 0, 0, 1,
-                    0, 1, 1, 0, 0, 1,
-                    // x+ face
-                    1, 1, 0, 1, 0, 0,
-                    1, 0, 0, 1, 0, 0,
-                    1, 1, 1, 1, 0, 0,
-                    1, 0, 1, 1, 0, 0,
-                    // x- face
-                    0, 1, 0, -1, 0, 0,
-                    0, 0, 0, -1, 0, 0,
-                    0, 1, 1, -1, 0, 0,
-                    0, 0, 1, -1, 0, 0,
-                    // y+ face
-                    1, 1, 0, 0, 1, 0,
-                    0, 1, 0, 0, 1, 0,
-                    1, 1, 1, 0, 1, 0,
-                    0, 1, 1, 0, 1, 0,
-                    // y- face
-                    1, 0, 0, 0, -1, 0,
-                    0, 0, 0, 0, -1, 0,
-                    1, 0, 1, 0, -1, 0,
-                    0, 0, 1, 0, -1, 0
-                };
 
         poziceOka = cam.getEye();
 
@@ -178,23 +139,6 @@ public class Renderer implements GLEventListener, MouseListener,
         primeBarvySvetla.add(new Vec3D(1, 1, 1));
         primeBarvySvetla.add(new Vec3D(1, 1, 1));
         primeBarvySvetla.add(new Vec3D(1, 1, 1));*/
-
-        int[] indexBufferData = new int[36];
-        for (int i = 0; i < 6; i++) {
-            indexBufferData[i * 6] = i * 4;
-            indexBufferData[i * 6 + 1] = i * 4 + 1;
-            indexBufferData[i * 6 + 2] = i * 4 + 2;
-            indexBufferData[i * 6 + 3] = i * 4 + 1;
-            indexBufferData[i * 6 + 4] = i * 4 + 2;
-            indexBufferData[i * 6 + 5] = i * 4 + 3;
-        }
-        OGLBuffers.Attrib[] attributes
-                = {
-                    new OGLBuffers.Attrib("inPosition", 3),
-                    new OGLBuffers.Attrib("inNormal", 3)
-                };
-
-        buffers = new OGLBuffers(gl, cube, attributes, indexBufferData);
     }
 
     @Override
@@ -206,16 +150,6 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
-
-        if (k) {
-            gl.glUseProgram(shaderProgram);
-            gl.glUniformMatrix4fv(locMat, 1, false,
-                    ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-            gl.glUniform3fv(locOko, 1, ToFloatArray.convert(poziceOka), 0);
-            gl.glUniform1f(locSvetlo, svetlo);
-
-            buffers.draw(GL2GL3.GL_TRIANGLES, shaderProgram);
-        }
 
         for (int i = 0; i < poziceSvetel.size(); i++) {
             gl.glUseProgram(svetloShaderProgram);
@@ -341,9 +275,6 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_F:
                 cam = cam.mulRadius(1.1f);
                 break;
-            case KeyEvent.VK_K:
-                k = !k;
-                break;
             case KeyEvent.VK_P:
                 poly = !poly;
                 break;
@@ -377,7 +308,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
     @Override
     public void dispose(GLAutoDrawable glDrawable) {
-        glDrawable.getGL().getGL2GL3().glDeleteProgram(shaderProgram);
+        glDrawable.getGL().getGL2GL3().glDeleteProgram(gridShaderProgram);
+        glDrawable.getGL().getGL2GL3().glDeleteProgram(svetloShaderProgram);
     }
 
 }
