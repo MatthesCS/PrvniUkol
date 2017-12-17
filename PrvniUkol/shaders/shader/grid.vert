@@ -25,6 +25,7 @@ uniform mat4 materialy[POCETMATERIALU];
 uniform vec3 oko;
 uniform float svetlo;
 uniform int material;
+uniform float cas;
 
 vec3 desk(vec2 paramPos)
 {
@@ -58,6 +59,7 @@ vec3 surface(vec2 paramPos)
     return sphere(paramPos);
     //return desk(paramPos);
     //return torus(paramPos);
+
 }
 
 vec3 normal(vec2 paramPos)

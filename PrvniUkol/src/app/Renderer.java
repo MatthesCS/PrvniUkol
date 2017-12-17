@@ -42,9 +42,10 @@ public class Renderer implements GLEventListener, MouseListener,
     private OGLBuffers grid, svetloBuf;
     private OGLTextRenderer textRenderer;
     private boolean poly = false;
+    private float cas = 0;
 
     private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
-    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial;
+    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas;
     private int svetlo, material = 0, pocetBodu = 50;
     private int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
 
@@ -89,6 +90,8 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
+        
+        gridLocCas = gl.glGetUniformLocation(gridShaderProgram, "cas");
 
         gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");
         gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");
@@ -114,7 +117,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         svetla.add(new Mat3(
                 new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(1, 1, 1), //barva světla
+                new Vec3D(1, 0, 0), //barva světla
                 new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
         ));
         svetla.add(new Mat3(
@@ -183,7 +186,15 @@ public class Renderer implements GLEventListener, MouseListener,
     @Override
     public void display(GLAutoDrawable glDrawable)
     {
-
+        cas += 0.1;
+        double pom = Math.cos((double) cas) * 0.5 + 0.5;
+        
+        svetla.set(0, new Mat3(
+                new Vec3D(5, 5, -3), //pozice světla
+                new Vec3D(pom, 0, 1-pom), //barva světla
+                new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
+        ));
+        
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, glDrawable.getGL().getGL2GL3(), "inPosition");
         poziceOka = cam.getEye();
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
@@ -211,6 +222,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         gl.glUniform1i(gridLocMaterial, material);
+        gl.glUniform1f(gridLocCas, cas);
 
         gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
         gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
