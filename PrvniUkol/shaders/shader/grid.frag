@@ -24,20 +24,7 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
 
-    /*vec3 x = tx;
-    vec3 y = -ty;
-    vec3 z = normalize(cross(x,y));
-    x = normalize(x);
-    y = cross(z, x);*/
-    
-    //vec4 pom = texture(texturaNormal, texCoord);
-    //vec3 normal = normalize(vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5)));
     vec3 normal = texture(texturaNormal, texCoord).rgb * 2 -1;
-
-    //mat3 TBN = mat3(x,y,z);
-    
-    //normal = normalize(normal + puvodniNormala);
-    //vec3 normal = normalize(vec3(pom.x, pom.y, pom.z));
 
     //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     //vec3 smerOka = normalize(oko - position);
@@ -49,13 +36,13 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
     vec3 ambientLightCol = ambBarva;
     vec3 directLightCol = primBarva[cisloSvetla];
 
-    vec3 reflected = -reflect(smerSvetla, normal);
+    vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
-    float difCoef = max(0, dot(normal, smerSvetla));//na gitu má, aby to nesvítilo za rohem
+    float difCoef = pow(max(0, smerSvetla.z), 0.7) * max(0, dot(normal, smerSvetla));
     float specCoef = 0;
     if (difCoef > 0.0)
     {
-        specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+        float specCoef = pow(max(0, smerSvetla.z), 0.7) * pow(max(0,dot(smerOka, reflected)), lesklost);
     }
 
     ambi = ambientLightCol * matDifCol;
@@ -66,12 +53,11 @@ void phong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 {
     vec3 position = vertPosition;
-    vec3 puvodniNormala = normalize(vertNormal);
-    vec4 pom = (texture(texturaNormal, texCoord) - texture(textura, texCoord)) + vec4(puvodniNormala,1.0);
-    vec3 normal = normalize(vec3(2 *(pom.x - 0.5),2 *(pom.y - 0.5),2 *(pom.z - 0.5)));
 
-    vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
-    vec3 smerOka = normalize(oko - position);
+    vec3 normal = texture(texturaNormal, texCoord).rgb * 2 -1;
+
+    vec3 smerSvetla = normalize(lightVec);
+    vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
     vec3 matDifCol = difBarva;
@@ -81,8 +67,8 @@ void blinnPhong(int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
-    float difCoef = max(0, dot(normal, smerSvetla));
-    float specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+    float difCoef = pow(max(0, smerSvetla.z), 0.7) * max(0, dot(normal, smerSvetla));
+    float specCoef = pow(max(0, smerSvetla.z), 0.7) * max(0, pow(dot(normal, halfVektor), lesklost));
 
     ambi = ambientLightCol * matDifCol;
     diff = directLightCol * matDifCol * difCoef;
@@ -115,7 +101,7 @@ void main() {
                 diffuseSum += diff;
                 specSum += spec;
             }
-            ambientSum /= POCETSVETEL;
+            ambientSum /= 1;
             outColor = outColor * vec4(ambientSum + diffuseSum + specSum, 1.0);
         }
 } 
