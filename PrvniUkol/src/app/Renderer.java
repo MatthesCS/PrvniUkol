@@ -18,6 +18,7 @@ import transforms.Camera;
 import transforms.Mat3;
 import transforms.Mat4;
 import transforms.Mat4PerspRH;
+import transforms.Point3D;
 import transforms.Vec3D;
 import utils.MeshGenerator;
 
@@ -40,16 +41,15 @@ public class Renderer implements GLEventListener, MouseListener,
     boolean poly = false;
 
     int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
-    int gridLocDifBarva, gridLocSpecBarva, gridLocAmbBarva, gridLocLesklost;
-    int gridLocSvetla;
+    int gridLocSvetla, gridLocMaterialy;
     int svetlo, pocetBodu = 50;
     int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
-    float lesklost;
 
     Camera cam = new Camera();
     Mat4 proj; // created in reshape()
-    Vec3D poziceOka, difuzniBarvaSvetla, specularniBarvaSvetla, ambientniBarvaSvetla;
+    Vec3D poziceOka;
     List<Mat3> svetla = new ArrayList<>();
+    List<Mat4> materialy = new ArrayList<>();
 
     OGLTexture2D texture, textureNormal;
     OGLTexture2D.Viewer textureViewer;
@@ -79,13 +79,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-        gridLocLesklost = gl.glGetUniformLocation(gridShaderProgram, "lesklost");
-
-        gridLocDifBarva = gl.glGetUniformLocation(gridShaderProgram, "difBarva");
-        gridLocSpecBarva = gl.glGetUniformLocation(gridShaderProgram, "specBarva");
-        gridLocAmbBarva = gl.glGetUniformLocation(gridShaderProgram, "ambBarva");
         
         gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");  
+        gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");  
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -106,42 +102,70 @@ public class Renderer implements GLEventListener, MouseListener,
         
         svetla.add(new Mat3(
                 new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(0, 0, 1),  //barva světla
+                new Vec3D(1, 1, 1),  //barva světla
                 new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
         ));
         svetla.add(new Mat3(
                 new Vec3D(0, 0, 5),
-                new Vec3D(1, 0, 0),
+                new Vec3D(1, 1, 1),
                 new Vec3D(0, 0, 0)
         ));
         svetla.add(new Mat3(
                 new Vec3D(0, 0, -5),
-                new Vec3D(0, 1, 0),
+                new Vec3D(1, 1, 1),
                 new Vec3D(0, 0, 0)
         ));
         
+        materialy.add(new Mat4(  //vlastní 0
+                new Point3D(0.2, 0.2, 0.2), //ambientní barva
+                new Point3D(0.7, 0.7, 0.7), //difůzní barva
+                new Point3D(1.0, 1.0, 1.0), //speculární barva
+                new Point3D(70.0, 0, 0)        //lesklost a 3x nic
+        ));
+        materialy.add(new Mat4(  //měď 1
+                new Point3D(0.01925, 0.0735, 0.0225),
+                new Point3D(0.7038, 0.27048, 0.0828),
+                new Point3D(0.256777, 0.137622, 0.086014),
+                new Point3D(12.8, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //černá guma 2
+                new Point3D(0.02, 0.02, 0.02),
+                new Point3D(0.01, 0.01, 0.01),
+                new Point3D(0.4, 0.4, 0.4),
+                new Point3D(10, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //chrom 3
+                new Point3D(0.25, 0.25, 0.25),
+                new Point3D(0.4, 0.4, 0.4),
+                new Point3D(0.774597, 0.774597, 0.774597),
+                new Point3D(76.8, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //leštěné zlato 4
+                new Point3D(0.24725, 0.1995, 0.0745),
+                new Point3D(0.75164, 0.60648, 0.22648),
+                new Point3D(0.628281, 0.555802, 0.366065),
+                new Point3D(51.2, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //emerald 5
+                new Point3D(0.0215, 0.1745, 0.0215, 0.55),
+                new Point3D(0.07568, 0.61424, 0.07568, 0.55),
+                new Point3D(0.633, 0.727811, 0.633, 0.55),
+                new Point3D(76.8, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //rubín 6
+                new Point3D(0.1745, 0.01175, 0.01175, 0.55),
+                new Point3D(0.61424, 0.04136, 0.04136, 0.55),
+                new Point3D(0.727811, 0.626959, 0.626959, 0.55),
+                new Point3D(76.8, 0, 0, 0)       
+        ));
+        materialy.add(new Mat4(  //tyrkys 7
+                new Point3D(0.1, 0.18725, 0.1745, 0.8),
+                new Point3D(0.396, 0.74151, 0.69102, 0.8),
+                new Point3D(0.297254, 0.30829, 0.306678, 0.8),
+                new Point3D(12.8, 0, 0, 0)       
+        ));
 
         svetlo = 0;
-        
-        difuzniBarvaSvetla = new Vec3D(0.7, 0.7, 0.7);//co sežere matroš
-        specularniBarvaSvetla = new Vec3D(1.0, 1.0, 1.0);//odražečná
-        ambientniBarvaSvetla = new Vec3D(0.2, 0.2, 0.2);//odraz?
-        lesklost = 70.0f;
-        
-        //měď
-        /*ambientniBarvaSvetla = new Vec3D(0.01925, 0.0735, 0.0225);
-        difuzniBarvaSvetla = new Vec3D(0.7038, 0.27048, 0.0828);
-        specularniBarvaSvetla = new Vec3D(0.256777, 0.137622, 0.086014);
-        lesklost = 12.8f;*/
-        
-        //černá guma 
-        /*ambientniBarvaSvetla = new Vec3D(0.02, 0.02, 0.02);
-        difuzniBarvaSvetla = new Vec3D(0.01, 0.01, 0.01);
-        specularniBarvaSvetla = new Vec3D(0.4, 0.4, 0.4);
-        lesklost = 10f;
-        primeBarvySvetla.add(new Vec3D(1, 1, 1));
-        primeBarvySvetla.add(new Vec3D(1, 1, 1));
-        primeBarvySvetla.add(new Vec3D(1, 1, 1));*/
     }
 
     @Override
@@ -168,11 +192,8 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
-        gl.glUniform3fv(gridLocAmbBarva, 1, ToFloatArray.convert(ambientniBarvaSvetla), 0);
-        gl.glUniform3fv(gridLocDifBarva, 1, ToFloatArray.convert(difuzniBarvaSvetla), 0);
-        gl.glUniform3fv(gridLocSpecBarva, 1, ToFloatArray.convert(specularniBarvaSvetla), 0);
-        gl.glUniform1f(gridLocLesklost, lesklost);
         gl.glUniformMatrix3fv(gridLocSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
+        gl.glUniformMatrix4fv(gridLocMaterialy, materialy.size(), false, ToFloatArray.convert(materialy), 0);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         

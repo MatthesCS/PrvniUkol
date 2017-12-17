@@ -1,5 +1,7 @@
 #version 150
 const int POCETSVETEL = 3;
+const int POCETMATERIALU = 8;
+const int MATROS = 7;
 const float PI = 3.1415927;
 const float DELTA = 0.001;
 
@@ -11,12 +13,9 @@ out vec3 vertPosition;
 out vec2 texCoord;
 uniform mat4 mat; 
 uniform mat3 svetla[POCETSVETEL];
+uniform mat4 materialy[POCETMATERIALU];
 uniform vec3 oko;
 uniform float svetlo;
-uniform float lesklost;
-uniform vec3 ambBarva;
-uniform vec3 difBarva;
-uniform vec3 specBarva;
 
 vec3 desk(vec2 paramPos)
 {
@@ -74,7 +73,7 @@ mat3 tangentMat(vec2 paramPos)
     return mat3(x,y,z);
 }
 
-void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
+void phong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
@@ -85,10 +84,11 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
 
-    vec3 matDifCol = difBarva;
-    vec3 matSpecCol = specBarva;
-    vec3 ambientLightCol = ambBarva;
+    vec4 ambientLightCol = materialy[MATROS][0];
+    vec4 matDifCol = materialy[MATROS][1];
+    vec4 matSpecCol = materialy[MATROS][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
+    float lesk = materialy[MATROS][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
@@ -97,7 +97,7 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     float utlum = 1.0;
     if (difCoef > 0.0)
     {
-        specCoef = max(0, pow(dot(smerOka, reflected), lesklost));
+        specCoef = max(0, pow(dot(smerOka, reflected), lesk));
         float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
         if(podil > 0)
         {
@@ -106,11 +106,11 @@ void phong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec
     }
 
     ambi = ambientLightCol * matDifCol;
-    diff = utlum * directLightCol * matDifCol * difCoef; 
-    spec = utlum * directLightCol * matSpecCol * specCoef;
+    diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
+    spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
 }
 
-void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, out vec3 spec)
+void blinnPhong(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
@@ -123,10 +123,11 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, ou
     vec3 smerOka = normalize(oko - position);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
-    vec3 matDifCol = difBarva;
-    vec3 matSpecCol = specBarva;
-    vec3 ambientLightCol = ambBarva;
+    vec4 ambientLightCol = materialy[MATROS][0];
+    vec4 matDifCol = materialy[MATROS][1];
+    vec4 matSpecCol = materialy[MATROS][2];
     vec3 directLightCol = svetla[cisloSvetla][1];
+    float lesk = materialy[MATROS][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal); //smerSvÄ›tla zĂˇpornÄ›
 
@@ -136,7 +137,7 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, ou
     float utlum = 1.0;
     if (difCoef > 0.0)
     {
-        specCoef = max(0, pow(dot(normal, halfVektor), lesklost));
+        specCoef = max(0, pow(dot(normal, halfVektor), lesk));
         float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
         if(podil > 0)
         {
@@ -145,8 +146,8 @@ void blinnPhong(vec2 paramPos, int cisloSvetla, out vec3 ambi, out vec3 diff, ou
     }
 
     ambi = ambientLightCol * matDifCol;
-    diff = utlum * directLightCol * matDifCol * difCoef; 
-    spec = utlum * directLightCol * matSpecCol * specCoef;
+    diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
+    spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
 }
 
 void main() {
@@ -162,11 +163,6 @@ void main() {
     //vertColor = vec4(texCoord, 0.0, 1.0);
     vertColor = vec4(1.0);
 
-    vec3 ambientSum = vec3(0);
-    vec3 diffuseSum = vec3(0);
-    vec3 specSum = vec3(0);
-    vec3 ambi, diff, spec;
-
     mat3 tanMat = tangentMat(inPosition);
     eyeVec = (oko - vertPosition)* tanMat;
     for(int i=0; i< POCETSVETEL; i++)
@@ -174,6 +170,10 @@ void main() {
         lightVec[i] = (svetla[i][0] - vertPosition) * tanMat;
     }
 
+    vec4 ambientSum = vec4(0);
+    vec4 diffuseSum = vec4(0);
+    vec4 specSum = vec4(0);
+    vec4 ambi, diff, spec;
 
     if(svetlo == 1.0 || svetlo == 2.0)
     {
@@ -190,6 +190,6 @@ void main() {
             specSum += spec;
         }
         ambientSum /= POCETSVETEL;
-        vertColor = vec4(ambientSum + diffuseSum + specSum, 1.0);
+        vertColor = ambientSum + diffuseSum + specSum;
     }
 } 
