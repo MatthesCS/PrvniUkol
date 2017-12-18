@@ -1,5 +1,6 @@
 package app;
 
+import gui.Gui;
 import com.jogamp.opengl.GL2GL3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -22,7 +23,6 @@ import transforms.Point3D;
 import transforms.Vec3D;
 import utils.MeshGenerator;
 
-import gui.*;
 import javax.swing.SwingUtilities;
 
 /**
