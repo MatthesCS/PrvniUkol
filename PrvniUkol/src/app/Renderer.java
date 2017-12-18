@@ -43,6 +43,7 @@ public class Renderer implements GLEventListener, MouseListener,
     private OGLTextRenderer textRenderer;
     private boolean poly = false;
     private float cas = 0;
+    private Gui gui;
 
     private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
     private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas;
@@ -51,7 +52,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     private Camera cam = new Camera();
     private Mat4 proj; // created in reshape()
-    private Vec3D poziceOka;
+    private Vec3D poziceOka, barva;
     private List<Mat3> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
 
@@ -62,11 +63,14 @@ public class Renderer implements GLEventListener, MouseListener,
     public void init(GLAutoDrawable glDrawable)
     {
         // check whether shaders are supported
+        gui = new Gui(this);
         SwingUtilities.invokeLater(()
                 -> 
                 {
-                    new Gui(this).setVisible(true);
+                    gui.setVisible(true);
         });
+        
+        barva = new Vec3D(1, 0, 0);
 
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         OGLUtils.shaderCheck(gl);
@@ -186,12 +190,13 @@ public class Renderer implements GLEventListener, MouseListener,
     @Override
     public void display(GLAutoDrawable glDrawable)
     {
+        gui.update();
         cas += 0.1;
         double pom = Math.cos((double) cas) * 0.5 + 0.5;
         
         svetla.set(0, new Mat3(
                 new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(pom, 0, 1-pom), //barva světla
+                new Vec3D(barva),
                 new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
         ));
         
@@ -335,13 +340,6 @@ public class Renderer implements GLEventListener, MouseListener,
             case KeyEvent.VK_P:
                 poly = !poly;
                 break;
-            case KeyEvent.VK_L:
-                svetlo++;
-                if (svetlo > 4)
-                {
-                    svetlo = 0;
-                }
-                break;
             case KeyEvent.VK_NUMPAD9:
                 if (pocetBodu < 100)
                 {
@@ -403,5 +401,21 @@ public class Renderer implements GLEventListener, MouseListener,
     public void setMaterial(int material)
     {
         this.material = material;
+    }
+
+    public int getPocetBodu() {
+        return pocetBodu;
+    }
+
+    public void setPocetBodu(int pocetBodu) {
+        this.pocetBodu = pocetBodu;
+    }
+
+    public Vec3D getBarva() {
+        return barva;
+    }
+
+    public void setBarva(Vec3D barva) {
+        this.barva = barva;
     }
 }
