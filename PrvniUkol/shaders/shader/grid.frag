@@ -25,20 +25,31 @@ uniform float svetlo;
 uniform int material;
 uniform sampler2D textura;
 uniform sampler2D texturaNormal;
+uniform sampler2D texturaVyska;
 
 void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
     vec3 position = vertPosition;
     vec3 utlumy = svetla[cisloSvetla][2];
 
-    vec3 normal = texture(texturaNormal, texCoord).rgb * 2 -1;
-
-    //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
-    //vec3 smerOka = normalize(oko - position);
     vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
     float vzdalenostSvetla = length(svetla[cisloSvetla][0] - position);
     vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
+
+    float vyska = texture(texturaVyska, texCoord).r;
+    float koefL = 0.04;
+    float koefK = -0.02;
+    vyska = vyska * koefL + koefK;
+
+    vec3 smerOko = normalize(oko - position);
+    vec2 posun = smerOka.xy / smerOka.z * vyska;
+    posun = posun + texCoord;
+
+    vec3 normal = texture(texturaNormal, posun).rgb * 2 -1;
+
+    //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
+    //vec3 smerOka = normalize(oko - position);
 
     vec4 ambientLightCol = materialy[material][0];
     vec4 matDifCol = materialy[material][1];

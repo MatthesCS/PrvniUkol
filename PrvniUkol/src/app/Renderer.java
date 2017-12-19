@@ -56,7 +56,7 @@ public class Renderer implements GLEventListener, MouseListener,
     private List<Mat3> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
 
-    private OGLTexture2D texture, textureNormal;
+    private OGLTexture2D texture, textureNormal, textureVyska;
     private OGLTexture2D.Viewer textureViewer;
 
     @Override
@@ -109,6 +109,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
         textureNormal = new OGLTexture2D(gl, "/textures/bricksn.png");
+        textureVyska = new OGLTexture2D(gl, "/textures/bricksh.png");
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
@@ -234,6 +235,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         texture.bind(gridShaderProgram, "textura", 0);
         textureNormal.bind(gridShaderProgram, "texturaNormal", 1);
+        textureVyska.bind(gridShaderProgram, "texturaVyska", 2);
 
         if (poly)
         {
