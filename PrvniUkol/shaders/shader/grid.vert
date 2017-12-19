@@ -128,7 +128,7 @@ void main() {
     vec3 position = surface(inPosition);
     gl_Position = mat * vec4(position, 1.0);
 
-    texCoord = vec2(inPosition.x, -inPosition.y + 1) * 2;
+    texCoord = vec2(inPosition.x, -inPosition.y + 1) * 4;
 
     vertPosition = position;
     //vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);

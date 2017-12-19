@@ -45,6 +45,7 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     vec3 smerOko = normalize(oko - position);
     vec2 posun = smerOka.xy / smerOka.z * vyska;
     posun = posun + texCoord;
+    posun = mod(posun, vec2(1.0));
 
     vec3 normal = texture(texturaNormal, posun).rgb * 2 -1;
 
