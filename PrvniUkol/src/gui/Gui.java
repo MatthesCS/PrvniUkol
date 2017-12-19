@@ -31,10 +31,12 @@ public class Gui extends JFrame
     private Renderer renderer;
     
     private JLabel lbBody;
+    private JLabel lbDelkaSvetla;
     
     private JButton btPolymode, btBodyPlus, btBodyMinus, btVyberBarvySvetla;
+    private JButton btDelkaSvetlaPlus, btDelkaSvetlaMinus;
     
-    private JPanel pnlBody;
+    private JPanel pnlBody, pnlDelkaSvetla;
     private JPanel pnlCenter;
     
     
@@ -93,7 +95,7 @@ public class Gui extends JFrame
         });
         
         lbBody = new JLabel();
-        lbBody.setText(Integer.toString( renderer.getPocetBodu()));
+        lbBody.setText("Bodů v gridu: " + Integer.toString(renderer.getPocetBodu()));
         
         btBodyMinus = new JButton("-");
         btBodyMinus.addActionListener(new ActionListener()
@@ -103,7 +105,7 @@ public class Gui extends JFrame
             {
                 if (renderer.getPocetBodu() > 4) {
                     renderer.setPocetBodu(renderer.getPocetBodu() - 1);
-                    lbBody.setText(Integer.toString( renderer.getPocetBodu()));
+                    lbBody.setText("Bodů v gridu: " + Integer.toString( renderer.getPocetBodu()));
                 }
             }
         });
@@ -116,7 +118,36 @@ public class Gui extends JFrame
             {
                 if (renderer.getPocetBodu() < 100) {
                     renderer.setPocetBodu(renderer.getPocetBodu() + 1);
-                    lbBody.setText(Integer.toString( renderer.getPocetBodu()));
+                    lbBody.setText("Bodů v gridu: " + Integer.toString( renderer.getPocetBodu()));
+                }
+            }
+        });
+        
+        lbDelkaSvetla = new JLabel();
+        lbDelkaSvetla.setText("Délka světelného kuželu: " + Integer.toString( renderer.getDelkaSvetla()));
+        
+        btDelkaSvetlaMinus = new JButton("-");
+        btDelkaSvetlaMinus.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if (renderer.getDelkaSvetla() > 1) {
+                    renderer.setDelkaSvetla(renderer.getDelkaSvetla() - 1);
+                    lbDelkaSvetla.setText("Délka světelného kuželu: " + Integer.toString( renderer.getDelkaSvetla()));
+                }
+            }
+        });
+        
+        btDelkaSvetlaPlus = new JButton("+");
+        btDelkaSvetlaPlus.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if (renderer.getDelkaSvetla() < 100) {
+                    renderer.setDelkaSvetla(renderer.getDelkaSvetla() + 1);
+                    lbDelkaSvetla.setText("Délka světelného kuželu: " + Integer.toString( renderer.getDelkaSvetla()));
                 }
             }
         });
@@ -125,6 +156,11 @@ public class Gui extends JFrame
         pnlBody.add(btBodyMinus);
         pnlBody.add(lbBody);
         pnlBody.add(btBodyPlus);
+        
+        pnlDelkaSvetla = new JPanel(new FlowLayout());
+        pnlDelkaSvetla.add(btDelkaSvetlaMinus);
+        pnlDelkaSvetla.add(lbDelkaSvetla);
+        pnlDelkaSvetla.add(btDelkaSvetlaPlus);
         
         btVyberBarvySvetla = new JButton("Barva světla…");
         btVyberBarvySvetla.addActionListener(new ActionListener()
@@ -142,6 +178,7 @@ public class Gui extends JFrame
         
         pnlCenter = new JPanel(new FlowLayout());
         pnlCenter.add(pnlBody);
+        pnlCenter.add(pnlDelkaSvetla);
         pnlCenter.add(cbSvetlo);
         pnlCenter.add(btVyberBarvySvetla);
         
@@ -157,6 +194,6 @@ public class Gui extends JFrame
     
     public void update()
     {
-        lbBody.setText(Integer.toString( renderer.getPocetBodu()));
+        lbBody.setText("Bodů v gridu: " + Integer.toString(renderer.getPocetBodu()));
     }
 }

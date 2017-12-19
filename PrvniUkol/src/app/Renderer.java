@@ -444,4 +444,14 @@ public class Renderer implements GLEventListener, MouseListener,
     public void setBarva(Vec3D barva) {
         this.barva = barva;
     }
+
+    public int getDelkaSvetla()
+    {
+        return delkaSvetla;
+    }
+
+    public void setDelkaSvetla(int delkaSvetla)
+    {
+        this.delkaSvetla = delkaSvetla;
+    }
 }
