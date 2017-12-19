@@ -119,9 +119,26 @@ void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out
         }
     }
 
+    vec3 smerSviceni = svetla[cisloSvetla][3].xyz;
+    float uhelSviceni = svetla[cisloSvetla][3].w;
+
+    float sviceni = degrees(acos(dot(normalize(smerSviceni), normalize(- (svetla[cisloSvetla][0].xyz - position)))));
+
+    float rozmazani = clamp((sviceni - uhelSviceni)/(1-uhelSviceni),0.0,1.0);
+
     ambi = ambientLightCol * matDifCol;
-    diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
-    spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
+    if(sviceni > uhelSviceni)
+    {
+        diff = vec4(0);
+        spec = vec4(0);
+    }
+    else
+    {
+        diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
+        spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
+        diff = mix(vec4(0.0), diff, rozmazani);
+        spec = mix(vec4(0.0), spec, rozmazani);
+    }
 }
 
 void main() {
