@@ -47,8 +47,8 @@ public class Renderer implements GLEventListener, MouseListener,
 
     private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
     private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas;
-    private int svetlo, material = 0, pocetBodu = 50;
-    private int svetloShaderProgram, locSvetloMat, locSvetloPozice, locSvetloBarva;
+    private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3;
+    private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka;
 
     private Camera cam = new Camera();
     private Mat4 proj; // created in reshape()
@@ -88,8 +88,9 @@ public class Renderer implements GLEventListener, MouseListener,
         createBuffers(gl);
 
         locSvetloMat = gl.glGetUniformLocation(svetloShaderProgram, "mat");
-        locSvetloPozice = gl.glGetUniformLocation(svetloShaderProgram, "pozice");
-        locSvetloBarva = gl.glGetUniformLocation(svetloShaderProgram, "barva");
+        locSvetloSvetlo = gl.glGetUniformLocation(svetloShaderProgram, "svetlo");
+        locSvetloRotacniMat = gl.glGetUniformLocation(svetloShaderProgram, "rotacniMat");
+        locSvetloDelka = gl.glGetUniformLocation(svetloShaderProgram, "vyska");
 
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
@@ -106,7 +107,9 @@ public class Renderer implements GLEventListener, MouseListener,
                 .withZenith(Math.PI * -0.125);
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-
+        gl.glEnable(gl.GL_BLEND);
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+        
         texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
         textureNormal = new OGLTexture2D(gl, "/textures/bricksn.png");
         textureVyska = new OGLTexture2D(gl, "/textures/bricksh.png");
@@ -123,20 +126,20 @@ public class Renderer implements GLEventListener, MouseListener,
         svetla.add(new Mat4(
                 new Point3D(5, 5, -3), //pozice světla, 4. nevyužita
                 new Point3D(1, 0, 0), //barva světla, 4. nevyužita
-                new Point3D(0, 0, 0), //útlumy světla (konstantní, lineární, kvadratický), 4. nevyužita
-                new Point3D(-5, -5, 0, 10) //směr svícení světla(xyz) a úhel kuželu světla (w)
+                new Point3D(1, 0, 0), //útlumy světla (konstantní, lineární, kvadratický), 4. nevyužita
+                new Point3D(-5, -5, 3, 10) //směr svícení světla(xyz) a úhel kuželu světla (w)
         ));
         svetla.add(new Mat4(
                 new Point3D(0, 0, 5),
                 new Point3D(1, 1, 1),
                 new Point3D(0, 0, 0),
-                new Point3D(0, 0, -1, 10)
+                new Point3D(0, 0, -1, 180)
         ));
         svetla.add(new Mat4(
                 new Point3D(0, 0, -5),
                 new Point3D(1, 1, 1),
-                new Point3D(0, 0, 0),
-                new Point3D(0, 0, 1, 180)
+                new Point3D(0, 1, 0),
+                new Point3D(0, 0, 1, 50)
         ));
 
         materialy.add(new Mat4( //vlastní 0
@@ -190,6 +193,22 @@ public class Renderer implements GLEventListener, MouseListener,
 
         svetlo = 0;
     }
+    
+    private Mat3 rotacniMat(int cisloSvetla)
+    {        
+        Vec3D smer = new Vec3D(svetla.get(cisloSvetla).getRow(3));
+        smer = smer.normalized().orElse(new Vec3D(0, 0, 0));
+        Vec3D nahoru = new Vec3D(0, 0, 1);
+        Vec3D osaX = nahoru.cross(smer);
+        if (osaX.eEquals(new Vec3D(0.0)))
+        {
+            osaX = new Vec3D(1.0, 0, 0);
+        }
+        Vec3D osaY = smer.cross(osaX);
+        Mat3 diag = new Mat3(new Vec3D(1, 0, 0), new Vec3D(0, 1, 0), new Vec3D(0, 0, 1));
+        
+        return diag.mul(new Mat3(osaX, osaY, smer));
+    }
 
     @Override
     public void display(GLAutoDrawable glDrawable)
@@ -201,7 +220,7 @@ public class Renderer implements GLEventListener, MouseListener,
         svetla.set(0, new Mat4(
                 new Point3D(5, 5, -3),
                 new Point3D(barva),
-                new Point3D(0, 0, 0),
+                new Point3D(2, 0, 0),
                 new Point3D(-5, -5, 3, 10 * pom)
         ));
         
@@ -217,9 +236,10 @@ public class Renderer implements GLEventListener, MouseListener,
             gl.glUseProgram(svetloShaderProgram);
             gl.glUniformMatrix4fv(locSvetloMat, 1, false,
                     ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-            gl.glUniform3fv(locSvetloBarva, 1, ToFloatArray.convert(svetla.get(i).getRow(1)), 0);
-            gl.glUniform3fv(locSvetloPozice, 1, ToFloatArray.convert(svetla.get(i).getRow(0)), 0);
-
+            gl.glUniformMatrix4fv(locSvetloSvetlo, 1, false, ToFloatArray.convert(svetla.get(i)), 0);
+            gl.glUniformMatrix3fv(locSvetloRotacniMat, 1, false, ToFloatArray.convert(ToFloatArray.convert(rotacniMat(i))), 0);
+            gl.glUniform1i(locSvetloDelka, delkaSvetla);
+            
             svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
         }
 
