@@ -37,6 +37,7 @@ import javax.swing.SwingUtilities;
 public class Renderer implements GLEventListener, MouseListener,
         MouseMotionListener, KeyListener
 {
+
     private int width, height, ox, oy;
 
     private OGLBuffers grid, svetloBuf;
@@ -46,8 +47,8 @@ public class Renderer implements GLEventListener, MouseListener,
     private Gui gui;
 
     private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
-    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas;
-    private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3;
+    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura;
+    private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0;
     private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka;
 
     private Camera cam = new Camera();
@@ -56,7 +57,7 @@ public class Renderer implements GLEventListener, MouseListener,
     private List<Mat4> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
 
-    private OGLTexture2D texture, textureNormal, textureVyska;
+    private OGLTexture2D t1, t2, t1n, t1h, t2n, t2h;
     private OGLTexture2D.Viewer textureViewer;
 
     @Override
@@ -69,7 +70,7 @@ public class Renderer implements GLEventListener, MouseListener,
                 {
                     gui.setVisible(true);
         });
-        
+
         barva = new Vec3D(1, 0, 0);
 
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
@@ -95,8 +96,9 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
-        
+
         gridLocCas = gl.glGetUniformLocation(gridShaderProgram, "cas");
+        gridLocTextura = gl.glGetUniformLocation(gridShaderProgram, "tex");
 
         gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");
         gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");
@@ -109,15 +111,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         /*gl.glEnable(gl.GL_BLEND);
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);*/
-        
-        /*
-        //https://kcclemo.neocities.org/creating-height-and-normal-maps/
-        texture = new OGLTexture2D(gl, "/textures/bricks.png");
-        textureNormal = new OGLTexture2D(gl, "/textures/bricksn.png");
-        textureVyska = new OGLTexture2D(gl, "/textures/bricksh.png");*/
-        texture = new OGLTexture2D(gl, "/textures/stones.jpg");
-        textureNormal = new OGLTexture2D(gl, "/textures/stonesn.png");
-        textureVyska = new OGLTexture2D(gl, "/textures/stonesh.png");
+
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
@@ -125,6 +119,14 @@ public class Renderer implements GLEventListener, MouseListener,
     {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
+
+        t1 = new OGLTexture2D(gl, "/textures/stones.jpg");
+        t1n = new OGLTexture2D(gl, "/textures/stonesn.png");
+        t1h = new OGLTexture2D(gl, "/textures/stonesh.png");
+        //https://kcclemo.neocities.org/creating-height-and-normal-maps/
+        t2 = new OGLTexture2D(gl, "/textures/bricks.png");
+        t2n = new OGLTexture2D(gl, "/textures/bricksn.png");
+        t2h = new OGLTexture2D(gl, "/textures/bricksh.png");
 
         poziceOka = cam.getEye();
 
@@ -198,9 +200,9 @@ public class Renderer implements GLEventListener, MouseListener,
 
         svetlo = 0;
     }
-    
+
     private Mat3 rotacniMat(int cisloSvetla)
-    {        
+    {
         Vec3D smer = new Vec3D(svetla.get(cisloSvetla).getRow(3));
         smer = smer.normalized().orElse(new Vec3D(0, 0, 0));
         Vec3D nahoru = new Vec3D(0, 0, 1);
@@ -211,27 +213,33 @@ public class Renderer implements GLEventListener, MouseListener,
         }
         Vec3D osaY = smer.cross(osaX);
         Mat3 diag = new Mat3(new Vec3D(1, 0, 0), new Vec3D(0, 1, 0), new Vec3D(0, 0, 1));
-        
+
         return diag.mul(new Mat3(osaX, osaY, smer));
     }
 
-    @Override
-    public void display(GLAutoDrawable glDrawable)
+    public void prenastav(GL2GL3 gl)
     {
         gui.update();
         cas += 0.1;
         double pom = Math.cos((double) cas) * 0.5 + 0.5;
-        
+
         svetla.set(0, new Mat4(
                 new Point3D(5, 5, -3),
                 new Point3D(barva),
                 new Point3D(2, 0, 0),
                 new Point3D(-5, -5, 3, 10 * pom)
         ));
-        
-        grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, glDrawable.getGL().getGL2GL3(), "inPosition");
+
+        grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         poziceOka = cam.getEye();
+    }
+
+    @Override
+    public void display(GLAutoDrawable glDrawable)
+    {
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+
+        prenastav(gl);
 
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
@@ -244,7 +252,7 @@ public class Renderer implements GLEventListener, MouseListener,
             gl.glUniformMatrix4fv(locSvetloSvetlo, 1, false, ToFloatArray.convert(svetla.get(i)), 0);
             gl.glUniformMatrix3fv(locSvetloRotacniMat, 1, false, ToFloatArray.convert(ToFloatArray.convert(rotacniMat(i))), 0);
             gl.glUniform1i(locSvetloDelka, delkaSvetla);
-            
+
             svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
         }
 
@@ -257,14 +265,16 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         gl.glUniform1i(gridLocMaterial, material);
+        gl.glUniform1i(gridLocTextura, textura);
         gl.glUniform1f(gridLocCas, cas);
 
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_S, GL2GL3.GL_REPEAT);
-        gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, GL2GL3.GL_TEXTURE_WRAP_T, GL2GL3.GL_REPEAT);
+        t1.bind(gridShaderProgram, "tex1", 0);
+        t1n.bind(gridShaderProgram, "tex1Normal", 1);
+        t1h.bind(gridShaderProgram, "tex1Vyska", 2);
 
-        texture.bind(gridShaderProgram, "textura", 0);
-        textureNormal.bind(gridShaderProgram, "texturaNormal", 1);
-        textureVyska.bind(gridShaderProgram, "texturaVyska", 2);
+        t2.bind(gridShaderProgram, "tex2", 3);
+        t2n.bind(gridShaderProgram, "tex2Normal", 4);
+        t2h.bind(gridShaderProgram, "tex2Vyska", 5);
 
         if (poly)
         {
@@ -434,19 +444,23 @@ public class Renderer implements GLEventListener, MouseListener,
         this.material = material;
     }
 
-    public int getPocetBodu() {
+    public int getPocetBodu()
+    {
         return pocetBodu;
     }
 
-    public void setPocetBodu(int pocetBodu) {
+    public void setPocetBodu(int pocetBodu)
+    {
         this.pocetBodu = pocetBodu;
     }
 
-    public Vec3D getBarva() {
+    public Vec3D getBarva()
+    {
         return barva;
     }
 
-    public void setBarva(Vec3D barva) {
+    public void setBarva(Vec3D barva)
+    {
         this.barva = barva;
     }
 
@@ -458,5 +472,15 @@ public class Renderer implements GLEventListener, MouseListener,
     public void setDelkaSvetla(int delkaSvetla)
     {
         this.delkaSvetla = delkaSvetla;
+    }
+
+    public int getTextura()
+    {
+        return textura;
+    }
+
+    public void setTextura(int textura)
+    {
+        this.textura = textura;
     }
 }

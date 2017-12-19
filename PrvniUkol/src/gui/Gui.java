@@ -40,7 +40,7 @@ public class Gui extends JFrame
     private JPanel pnlCenter;
     
     
-    private JComboBox<String> cbMaterialy, cbSvetlo;
+    private JComboBox<String> cbMaterialy, cbSvetlo, cbTextura;
     
     public Gui(Renderer renderer)
     {
@@ -62,7 +62,7 @@ public class Gui extends JFrame
             }
         });
         
-        String[] materialy = new String[] {"Default", "Měď", "Černá guma", "Chrom", "Zlato", "Emerald", "Rubín", "Tyrkys    "};
+        String[] materialy = new String[] {"Default", "Měď", "Černá guma", "Chrom", "Zlato", "Emerald", "Rubín", "Tyrkys"};
         
         cbMaterialy = new JComboBox<>(materialy);
         cbMaterialy.setSelectedIndex(0);
@@ -73,6 +73,20 @@ public class Gui extends JFrame
             {
                 JComboBox cb = (JComboBox)e.getSource();
                 renderer.setMaterial((Integer) cb.getSelectedIndex());
+            }
+        });
+        
+        String[] textury = new String[] {"Žádná", "Kamenná zeď", "Cihlová zeď"};
+        
+        cbTextura = new JComboBox<>(textury);
+        cbTextura.setSelectedIndex(0);
+        cbTextura.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JComboBox cb = (JComboBox)e.getSource();
+                renderer.setTextura((Integer) cb.getSelectedIndex());
             }
         });
         
@@ -181,6 +195,7 @@ public class Gui extends JFrame
         pnlCenter.add(pnlDelkaSvetla);
         pnlCenter.add(cbSvetlo);
         pnlCenter.add(btVyberBarvySvetla);
+        pnlCenter.add(cbTextura);
         
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(btPolymode, "North");

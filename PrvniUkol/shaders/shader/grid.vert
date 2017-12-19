@@ -18,6 +18,7 @@ out vec4 vertColor;
 out vec3 eyeVec;
 out vec3 lightVec[POCETSVETEL];
 out vec3 vertPosition;
+out vec3 vertNormal;
 out vec2 texCoord;
 uniform mat4 mat; 
 uniform mat4 svetla[POCETSVETEL];
@@ -149,6 +150,7 @@ void main() {
     texCoord = vec2(inPosition.x, -inPosition.y + 1) * 4;
 
     vertPosition = position;
+    vertNormal = normal(inPosition);
     //vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
     //vertColor = vec4(inPosition, 0.0, 1.0);
     //vertColor = vec3(position);

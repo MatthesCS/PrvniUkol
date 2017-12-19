@@ -12,6 +12,7 @@ const int SPECBLINNPHONGF = 14;
 
 in vec4 vertColor; // input from the previous pipeline stage
 in vec3 vertPosition;
+in vec3 vertNormal;
 in vec2 texCoord;
 in vec3 eyeVec;  //normal
 in vec3 lightVec[POCETSVETEL];  //normal
@@ -24,9 +25,13 @@ uniform mat4 materialy[POCETMATERIALU];
 uniform float svetlo;
 uniform float cas;
 uniform int material;
-uniform sampler2D textura;
-uniform sampler2D texturaNormal;
-uniform sampler2D texturaVyska;
+uniform sampler2D tex1;
+uniform sampler2D tex1Normal;
+uniform sampler2D tex1Vyska;
+uniform sampler2D tex2;
+uniform sampler2D tex2Normal;
+uniform sampler2D tex2Vyska;
+uniform int tex;
 
 void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
@@ -39,18 +44,31 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
-    float vyska = texture(texturaVyska, texCoord).r;
+    float vyska = 0.0;
+    if(tex == 1)
+    {
+        vyska = texture(tex1Vyska, texCoord).r;
+    }
+    else if(tex == 2)
+    {
+        vyska = texture(tex2Vyska, texCoord).r;
+    }
     float koefL = 0.04;
     float koefK = -0.02;
     vyska = vyska * koefL + koefK;
 
-    vec3 smerOko = normalize(oko - position);
     vec2 posun = smerOka.xy / smerOka.z * vyska;
     posun = posun + texCoord;
-    posun = mod(posun, vec2(1.0));
 
-    vec3 normal = texture(texturaNormal, posun).rgb;
-    normal = normal * 2 -1;
+    vec3 normal = vertNormal;
+    if(tex == 1)
+    {
+        normal = texture(tex1Normal, posun).rgb * 2 - 1;
+    }
+    else if(tex == 2)
+    {
+        normal = texture(tex2Normal, posun).rgb * 2 - 1;
+    }
 
     //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
     //vec3 smerOka = normalize(oko - position);
@@ -154,5 +172,12 @@ void main() {
                 outColor = specSum;
             }
         }
-        outColor *=  texture(textura, texCoord);
+        if (tex == 1)
+        {
+            outColor *=  texture(tex1, texCoord);
+        }
+        else if (tex == 2)
+        {
+            outColor *=  texture(tex2, texCoord);
+        }
 } 
