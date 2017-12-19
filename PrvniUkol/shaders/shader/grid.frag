@@ -19,9 +19,10 @@ in vec3 lightVec[POCETSVETEL];  //normal
 out vec4 outColor; // output from the fragment shader
 
 uniform vec3 oko;
-uniform mat3 svetla[POCETSVETEL];
+uniform mat4 svetla[POCETSVETEL];
 uniform mat4 materialy[POCETMATERIALU];
 uniform float svetlo;
+uniform float cas;
 uniform int material;
 uniform sampler2D textura;
 uniform sampler2D texturaNormal;
@@ -29,8 +30,9 @@ uniform sampler2D texturaVyska;
 
 void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
+
     vec3 position = vertPosition;
-    vec3 utlumy = svetla[cisloSvetla][2];
+    vec3 utlumy = svetla[cisloSvetla][2].xyz;
 
     vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
     float vzdalenostSvetla = length(svetla[cisloSvetla][0] - position);
@@ -55,7 +57,7 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     vec4 ambientLightCol = materialy[material][0];
     vec4 matDifCol = materialy[material][1];
     vec4 matSpecCol = materialy[material][2];
-    vec3 directLightCol = svetla[cisloSvetla][1];
+    vec3 directLightCol = svetla[cisloSvetla][1].xyz;
     float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
@@ -76,10 +78,29 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
             utlum /= podil;
         }
     }
+    
+    vec3 smerSviceni = svetla[cisloSvetla][3].xyz;
+    float uhelSviceni = svetla[cisloSvetla][3].w;
+
+    float sviceni = degrees(acos(dot(normalize(smerSviceni), normalize(- (svetla[cisloSvetla][0].xyz - position)))));
+
+    float rozmazani = clamp((sviceni - uhelSviceni)/(1-uhelSviceni),0.0,1.0);
+    //clamp vratí hodnotu, pokud je v rozmezí, jinak vrátí min nebo max podle toho kde přetejká hodnota
 
     ambi = ambientLightCol * matDifCol;
-    diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
-    spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
+    if(sviceni > uhelSviceni)
+    {
+        diff = vec4(0);
+        spec = vec4(0);
+    }
+    else
+    {
+        diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
+        spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
+        diff = mix(vec4(0.0), diff, rozmazani);
+        spec = mix(vec4(0.0), spec, rozmazani);
+        //mix(x,y,a) = x*(1-a)+y*(a) -> mix(0,y,a) = y*a
+    }
 }
 
 void main() {

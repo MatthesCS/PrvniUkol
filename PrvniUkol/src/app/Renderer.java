@@ -53,7 +53,7 @@ public class Renderer implements GLEventListener, MouseListener,
     private Camera cam = new Camera();
     private Mat4 proj; // created in reshape()
     private Vec3D poziceOka, barva;
-    private List<Mat3> svetla = new ArrayList<>();
+    private List<Mat4> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
 
     private OGLTexture2D texture, textureNormal, textureVyska;
@@ -120,20 +120,23 @@ public class Renderer implements GLEventListener, MouseListener,
 
         poziceOka = cam.getEye();
 
-        svetla.add(new Mat3(
-                new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(1, 0, 0), //barva světla
-                new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
+        svetla.add(new Mat4(
+                new Point3D(5, 5, -3), //pozice světla, 4. nevyužita
+                new Point3D(1, 0, 0), //barva světla, 4. nevyužita
+                new Point3D(0, 0, 0), //útlumy světla (konstantní, lineární, kvadratický), 4. nevyužita
+                new Point3D(-5, -5, 0, 10) //směr svícení světla(xyz) a úhel kuželu světla (w)
         ));
-        svetla.add(new Mat3(
-                new Vec3D(0, 0, 5),
-                new Vec3D(1, 1, 1),
-                new Vec3D(0, 0, 0)
+        svetla.add(new Mat4(
+                new Point3D(0, 0, 5),
+                new Point3D(1, 1, 1),
+                new Point3D(0, 0, 0),
+                new Point3D(0, 0, -1, 10)
         ));
-        svetla.add(new Mat3(
-                new Vec3D(0, 0, -5),
-                new Vec3D(1, 1, 1),
-                new Vec3D(0, 0, 0)
+        svetla.add(new Mat4(
+                new Point3D(0, 0, -5),
+                new Point3D(1, 1, 1),
+                new Point3D(0, 0, 0),
+                new Point3D(0, 0, 1, 180)
         ));
 
         materialy.add(new Mat4( //vlastní 0
@@ -195,10 +198,11 @@ public class Renderer implements GLEventListener, MouseListener,
         cas += 0.1;
         double pom = Math.cos((double) cas) * 0.5 + 0.5;
         
-        svetla.set(0, new Mat3(
-                new Vec3D(5, 5, -3), //pozice světla
-                new Vec3D(barva),
-                new Vec3D(0, 0, 0) //útlumy světla (konstantní, lineární, kvadratický)
+        svetla.set(0, new Mat4(
+                new Point3D(5, 5, -3),
+                new Point3D(barva),
+                new Point3D(0, 0, 0),
+                new Point3D(-5, -5, 3, 10 * pom)
         ));
         
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, glDrawable.getGL().getGL2GL3(), "inPosition");
@@ -223,7 +227,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
-        gl.glUniformMatrix3fv(gridLocSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
+        gl.glUniformMatrix4fv(gridLocSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
         gl.glUniformMatrix4fv(gridLocMaterialy, materialy.size(), false, ToFloatArray.convert(materialy), 0);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);

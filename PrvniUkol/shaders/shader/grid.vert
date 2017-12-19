@@ -20,7 +20,7 @@ out vec3 lightVec[POCETSVETEL];
 out vec3 vertPosition;
 out vec2 texCoord;
 uniform mat4 mat; 
-uniform mat3 svetla[POCETSVETEL];
+uniform mat4 svetla[POCETSVETEL];
 uniform mat4 materialy[POCETMATERIALU];
 uniform vec3 oko;
 uniform float svetlo;
@@ -88,9 +88,9 @@ void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out
 {
     vec3 position = surface(paramPos);
     vec3 normal = normal(paramPos);
-    vec3 utlumy = svetla[cisloSvetla][2];
+    vec3 utlumy = svetla[cisloSvetla][2].xyz;
 
-    vec3 smerSvetla = svetla[cisloSvetla][0] - position;
+    vec3 smerSvetla = svetla[cisloSvetla][0].xyz - position;
     float vzdalenostSvetla = length(smerSvetla);
     smerSvetla = normalize(smerSvetla);
     vec3 smerOka = normalize(oko - position);
@@ -99,7 +99,7 @@ void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out
     vec4 ambientLightCol = materialy[material][0];
     vec4 matDifCol = materialy[material][1];
     vec4 matSpecCol = materialy[material][2];
-    vec3 directLightCol = svetla[cisloSvetla][1];
+    vec3 directLightCol = svetla[cisloSvetla][1].xyz;
     float lesk = materialy[material][3].x;
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
@@ -141,7 +141,7 @@ void main() {
     eyeVec = (oko - vertPosition)* tanMat;
     for(int i=0; i< POCETSVETEL; i++)
     {
-        lightVec[i] = (svetla[i][0] - vertPosition) * tanMat;
+        lightVec[i] = (svetla[i][0].xyz - vertPosition) * tanMat;
     }
 
     vec4 ambientSum = vec4(0);
