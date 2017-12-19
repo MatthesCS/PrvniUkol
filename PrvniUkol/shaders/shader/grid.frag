@@ -35,7 +35,7 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     vec3 utlumy = svetla[cisloSvetla][2].xyz;
 
     vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
-    float vzdalenostSvetla = length(svetla[cisloSvetla][0] - position);
+    float vzdalenostSvetla = length(svetla[cisloSvetla][0].xyz - position);
     vec3 smerOka = normalize(eyeVec);
     vec3 halfVektor = normalize(smerSvetla + smerOka);
 
@@ -89,17 +89,17 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     //clamp vratí hodnotu, pokud je v rozmezí, jinak vrátí min nebo max podle toho kde přetejká hodnota
 
     ambi = ambientLightCol * matDifCol;
-    //if(sviceni > uhelSviceni)
+    if(sviceni > uhelSviceni)
     {
         diff = vec4(0);
         spec = vec4(0);
     }
-    //else
+    else
     {
         diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
         spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
-        //diff = mix(vec4(0.0), diff, rozmazani);
-        //spec = mix(vec4(0.0), spec, rozmazani);
+        diff = mix(vec4(0.0), diff, rozmazani);
+        spec = mix(vec4(0.0), spec, rozmazani);
         //mix(x,y,a) = x*(1-a)+y*(a) -> mix(0,y,a) = y*a
     }
 }
