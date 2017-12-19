@@ -107,12 +107,17 @@ public class Renderer implements GLEventListener, MouseListener,
                 .withZenith(Math.PI * -0.125);
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-        gl.glEnable(gl.GL_BLEND);
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+        /*gl.glEnable(gl.GL_BLEND);
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);*/
         
-        texture = new OGLTexture2D(gl, "/textures/bricks.jpg");
+        /*
+        //https://kcclemo.neocities.org/creating-height-and-normal-maps/
+        texture = new OGLTexture2D(gl, "/textures/bricks.png");
         textureNormal = new OGLTexture2D(gl, "/textures/bricksn.png");
-        textureVyska = new OGLTexture2D(gl, "/textures/bricksh.png");
+        textureVyska = new OGLTexture2D(gl, "/textures/bricksh.png");*/
+        texture = new OGLTexture2D(gl, "/textures/stones.jpg");
+        textureNormal = new OGLTexture2D(gl, "/textures/stonesn.png");
+        textureVyska = new OGLTexture2D(gl, "/textures/stonesh.png");
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
 
@@ -132,13 +137,13 @@ public class Renderer implements GLEventListener, MouseListener,
         svetla.add(new Mat4(
                 new Point3D(0, 0, 5),
                 new Point3D(1, 1, 1),
-                new Point3D(0, 0, 0),
+                new Point3D(0, 1, 0),
                 new Point3D(0, 0, -1, 180)
         ));
         svetla.add(new Mat4(
                 new Point3D(0, 0, -5),
                 new Point3D(1, 1, 1),
-                new Point3D(0, 1, 0),
+                new Point3D(1, 0.1, 0.01),
                 new Point3D(0, 0, 1, 50)
         ));
 

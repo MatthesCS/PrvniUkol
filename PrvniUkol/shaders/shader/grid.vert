@@ -138,6 +138,7 @@ void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out
         spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
         diff = mix(vec4(0.0), diff, rozmazani);
         spec = mix(vec4(0.0), spec, rozmazani);
+        //mix(x,y,a) = x*(1-a)+y*(a) -> mix(0,y,a) = y*a
     }
 }
 
