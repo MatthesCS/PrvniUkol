@@ -49,10 +49,10 @@ public class Renderer implements GLEventListener, MouseListener,
     private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
     private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura;
     private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0;
-    private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka;
+    private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka, locSvetloScreen;
 
     private Camera cam = new Camera();
-    private Mat4 proj; // created in reshape()
+    private Mat4 proj, screenDoor;
     private Vec3D poziceOka, barva;
     private List<Mat4> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
@@ -92,6 +92,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locSvetloSvetlo = gl.glGetUniformLocation(svetloShaderProgram, "svetlo");
         locSvetloRotacniMat = gl.glGetUniformLocation(svetloShaderProgram, "rotacniMat");
         locSvetloDelka = gl.glGetUniformLocation(svetloShaderProgram, "vyska");
+        locSvetloScreen = gl.glGetUniformLocation(svetloShaderProgram, "screenMat");
 
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
@@ -109,8 +110,6 @@ public class Renderer implements GLEventListener, MouseListener,
                 .withZenith(Math.PI * -0.125);
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-        /*gl.glEnable(gl.GL_BLEND);
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);*/
 
         textureViewer = new OGLTexture2D.Viewer(gl);
     }
@@ -198,6 +197,13 @@ public class Renderer implements GLEventListener, MouseListener,
                 new Point3D(12.8, 0, 0, 0)
         ));
 
+        screenDoor = new Mat4(
+                new Point3D(1.0 / 17, 9.0 / 17.0, 3.0 / 17.0, 11.0 / 17.0),
+                new Point3D(13.0 / 17.0, 5.0 / 17.0, 15.0 / 17.0, 7.0 / 17.0),
+                new Point3D(4.0 / 17.0, 12.0 / 17.0, 2.0 / 17.0, 10.0 / 17.0),
+                new Point3D(16.0 / 17.0, 8.0 / 17.0, 14.0 / 17.0, 6.0 / 17.0)
+        );
+
         svetlo = 0;
     }
 
@@ -243,19 +249,10 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
 
-        for (int i = 0; i < svetla.size(); i++)
-        {
-            gl.glUseProgram(svetloShaderProgram);
-            gl.glUniformMatrix4fv(locSvetloMat, 1, false,
-                    ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
-            gl.glUniformMatrix4fv(locSvetloSvetlo, 1, false, ToFloatArray.convert(svetla.get(i)), 0);
-            gl.glUniformMatrix3fv(locSvetloRotacniMat, 1, false, ToFloatArray.convert(ToFloatArray.convert(rotacniMat(i))), 0);
-            gl.glUniform1i(locSvetloDelka, delkaSvetla);
-
-            svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
-        }
-
         gl.glUseProgram(gridShaderProgram);
+        gl.glEnable(gl.GL_BLEND);
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
@@ -281,6 +278,25 @@ public class Renderer implements GLEventListener, MouseListener,
         }
 
         grid.draw(GL2GL3.GL_TRIANGLES, gridShaderProgram);
+
+        for (int i = 0; i < svetla.size(); i++)
+        {
+            gl.glUseProgram(svetloShaderProgram);
+            gl.glDisable(gl.GL_BLEND);
+            //gl.glEnable(gl.GL_BLEND);
+            //gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+            //gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA);
+            //gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE);
+
+            gl.glUniformMatrix4fv(locSvetloMat, 1, false,
+                    ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
+            gl.glUniformMatrix4fv(locSvetloSvetlo, 1, false, ToFloatArray.convert(svetla.get(i)), 0);
+            gl.glUniformMatrix4fv(locSvetloScreen, 1, false, ToFloatArray.convert(screenDoor), 0);
+            gl.glUniformMatrix3fv(locSvetloRotacniMat, 1, false, ToFloatArray.convert(ToFloatArray.convert(rotacniMat(i))), 0);
+            gl.glUniform1i(locSvetloDelka, delkaSvetla);
+
+            svetloBuf.draw(GL2GL3.GL_TRIANGLES, svetloShaderProgram);
+        }
 
         //textureViewer.view(texture, -1, -1, 0.5);
         //textureViewer.view(textureNormal, -1, -1, 0.5);

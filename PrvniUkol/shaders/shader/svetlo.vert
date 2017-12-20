@@ -2,6 +2,7 @@
 in vec2 inPosition;
 out vec3 vertColor;
 out vec3 vertPosition;
+out vec2 pom;
 uniform mat4 svetlo;
 uniform mat4 mat;
 uniform mat3 rotacniMat;
@@ -33,6 +34,7 @@ vec3 kuzel(vec2 paramPos)
 
 void main() {
     vec3 pozice = svetlo[0].xyz;
+    pom = inPosition;
     vec3 position = vec3(0.0);
     if(svetlo[3].w > abs(90))
     {
