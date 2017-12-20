@@ -212,9 +212,8 @@ public class Renderer implements GLEventListener, MouseListener,
             osaX = new Vec3D(1.0, 0, 0);
         }
         Vec3D osaY = smer.cross(osaX);
-        Mat3 diag = new Mat3(new Vec3D(1, 0, 0), new Vec3D(0, 1, 0), new Vec3D(0, 0, 1));
 
-        return diag.mul(new Mat3(osaX, osaY, smer));
+        return new Mat3(osaX, osaY, smer);
     }
 
     public void prenastav(GL2GL3 gl)
