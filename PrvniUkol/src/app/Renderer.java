@@ -40,7 +40,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
     private int width, height, ox, oy;
 
-    private OGLBuffers grid, svetloBuf;
+    private OGLBuffers grid, svetloBuf, stena;
     private OGLTextRenderer textRenderer;
     private boolean poly = false;
     private float cas = 0;
@@ -50,12 +50,15 @@ public class Renderer implements GLEventListener, MouseListener,
     private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura;
     private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0;
     private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka, locSvetloScreen;
+    private int stenaShaderProgram, locStenaMat, locStenaSvetla, locStenaMaterialy, locStenaOko, locStenaMaterial;
+    private int locStenaSvetlo, locStenaTex, locStenaSouradnice;
 
     private Camera cam = new Camera();
     private Mat4 proj, screenDoor;
     private Vec3D poziceOka, barva;
     private List<Mat4> svetla = new ArrayList<>();
     private List<Mat4> materialy = new ArrayList<>();
+    private List<Point3D> steny = new ArrayList<>();
 
     private OGLTexture2D t1, t2, t1n, t1h, t2n, t2h;
     private OGLTexture2D.Viewer textureViewer;
@@ -86,6 +89,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
         gridShaderProgram = ShaderUtils.loadProgram(gl, "/shader/grid");
         svetloShaderProgram = ShaderUtils.loadProgram(gl, "/shader/svetlo");
+        stenaShaderProgram = ShaderUtils.loadProgram(gl, "/shader/stena");
         createBuffers(gl);
 
         locSvetloMat = gl.glGetUniformLocation(svetloShaderProgram, "mat");
@@ -105,6 +109,15 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");
         gridLocMaterial = gl.glGetUniformLocation(gridShaderProgram, "material");
 
+        locStenaMat = gl.glGetUniformLocation(stenaShaderProgram, "mat");
+        locStenaSvetlo = gl.glGetUniformLocation(stenaShaderProgram, "svetlo");
+        locStenaOko = gl.glGetUniformLocation(stenaShaderProgram, "oko");
+        locStenaTex = gl.glGetUniformLocation(stenaShaderProgram, "tex");
+        locStenaSvetla = gl.glGetUniformLocation(stenaShaderProgram, "svetla");
+        locStenaMaterialy = gl.glGetUniformLocation(stenaShaderProgram, "materialy");
+        locStenaMaterial = gl.glGetUniformLocation(stenaShaderProgram, "material");
+        locStenaSouradnice = gl.glGetUniformLocation(stenaShaderProgram, "pozice");
+
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
                 .withZenith(Math.PI * -0.125);
@@ -118,6 +131,7 @@ public class Renderer implements GLEventListener, MouseListener,
     {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
+        stena = MeshGenerator.generateGrid(20, 20, gl, "inPosition");
 
         t1 = new OGLTexture2D(gl, "/textures/stones.jpg");
         t1n = new OGLTexture2D(gl, "/textures/stonesn.png");
@@ -204,6 +218,13 @@ public class Renderer implements GLEventListener, MouseListener,
                 new Point3D(16.0 / 17.0, 8.0 / 17.0, 14.0 / 17.0, 6.0 / 17.0)
         );
 
+        steny.add(new Point3D(-5, 10, 10, 1));  //pozice, velikost čtverce, pozice, kde je pozice  
+        steny.add(new Point3D(5, 10, 10, 1));
+        steny.add(new Point3D(10, -5, 10, 2));
+        steny.add(new Point3D(10, 5, 10, 2));
+        steny.add(new Point3D(10, 10, -5, 3));
+        steny.add(new Point3D(10, 10, 5, 3));
+
         svetlo = 0;
     }
 
@@ -279,13 +300,64 @@ public class Renderer implements GLEventListener, MouseListener,
 
         grid.draw(GL2GL3.GL_TRIANGLES, gridShaderProgram);
 
+        for (int i = 0; i < steny.size(); i++)
+        {
+            double souradnice = 0;
+            double souradniceOka = 0;
+            if (steny.get(i).getW() == 1)
+            {
+                souradnice = steny.get(i).getX();
+                souradniceOka = poziceOka.getX();
+            }
+            else if (steny.get(i).getW() == 2)
+            {
+                souradnice = steny.get(i).getY();
+                souradniceOka = poziceOka.getY();
+                
+            }
+            else if (steny.get(i).getW() == 3)
+            {
+                souradnice = steny.get(i).getZ();
+                souradniceOka = poziceOka.getZ();                
+            }
+            
+            if (!((souradnice < 0 && souradniceOka < 0)
+                        || (souradnice > 0 && souradniceOka > 0)))
+                {
+
+                    gl.glUseProgram(stenaShaderProgram);
+                    gl.glDisable(gl.GL_BLEND);
+
+                    gl.glUniformMatrix4fv(locStenaMat, 1, false,
+                            ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
+                    gl.glUniform3fv(locStenaOko, 1, ToFloatArray.convert(poziceOka), 0);
+                    gl.glUniformMatrix4fv(locStenaSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
+                    gl.glUniformMatrix4fv(locStenaMaterialy, materialy.size(), false, ToFloatArray.convert(materialy), 0);
+                    gl.glUniform4fv(locStenaSouradnice, 1, ToFloatArray.convert(steny.get(i)), 0);
+
+                    gl.glUniform1f(locStenaSvetlo, svetlo);
+                    gl.glUniform1i(locStenaMaterial, material);
+                    gl.glUniform1i(locStenaTex, textura);
+
+                    t1.bind(stenaShaderProgram, "tex1", 0);
+                    t1n.bind(stenaShaderProgram, "tex1Normal", 1);
+                    t1h.bind(stenaShaderProgram, "tex1Vyska", 2);
+
+                    t2.bind(stenaShaderProgram, "tex2", 3);
+                    t2n.bind(stenaShaderProgram, "tex2Normal", 4);
+                    t2h.bind(stenaShaderProgram, "tex2Vyska", 5);
+
+                    stena.draw(GL2GL3.GL_TRIANGLES, stenaShaderProgram);
+                }
+        }
+
         for (int i = 0; i < svetla.size(); i++)
         {
             gl.glUseProgram(svetloShaderProgram);
-            gl.glDisable(gl.GL_BLEND);
-            //gl.glEnable(gl.GL_BLEND);
+            //gl.glDisable(gl.GL_BLEND);
+            gl.glEnable(gl.GL_BLEND);
             //gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-            //gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA);
             //gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE);
 
             gl.glUniformMatrix4fv(locSvetloMat, 1, false,

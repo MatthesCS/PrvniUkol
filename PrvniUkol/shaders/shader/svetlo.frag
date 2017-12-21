@@ -17,11 +17,11 @@ void main() {
         {
             utlum /= podil;
         }
-        outColor =  vec4(vertColor * utlum, 0.3);
-        float alpha = screenMat[int(mod(vertPosition.x*100*vertPosition.z*100,4))]
+        outColor =  vec4(vertColor * utlum, 0.5);
+        /*float alpha = screenMat[int(mod(vertPosition.x*100*vertPosition.z*100,4))]
                                 [int(mod(vertPosition.y*100*vertPosition.z*100,4))];
         if(alpha < outColor.a)
         {
             discard;
-        }
+        }*/
 } 
