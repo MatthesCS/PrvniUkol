@@ -42,16 +42,16 @@ public class Renderer implements GLEventListener, MouseListener,
 
     private OGLBuffers grid, svetloBuf, stena;
     private OGLTextRenderer textRenderer;
-    private boolean poly = false;
+    private boolean poly = false, zdi = false, utlumy = true;
     private float cas = 0;
     private Gui gui;
 
-    private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko;
+    private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocUtlum;
     private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura;
     private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0;
     private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka, locSvetloScreen;
     private int stenaShaderProgram, locStenaMat, locStenaSvetla, locStenaMaterialy, locStenaOko, locStenaMaterial;
-    private int locStenaSvetlo, locStenaTex, locStenaSouradnice;
+    private int locStenaSvetlo, locStenaTex, locStenaSouradnice, locStenaUtlum;
 
     private Camera cam = new Camera();
     private Mat4 proj, screenDoor;
@@ -101,6 +101,7 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocMat = gl.glGetUniformLocation(gridShaderProgram, "mat");
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
+        gridLocUtlum = gl.glGetUniformLocation(gridShaderProgram, "utlum");
 
         gridLocCas = gl.glGetUniformLocation(gridShaderProgram, "cas");
         gridLocTextura = gl.glGetUniformLocation(gridShaderProgram, "tex");
@@ -117,6 +118,7 @@ public class Renderer implements GLEventListener, MouseListener,
         locStenaMaterialy = gl.glGetUniformLocation(stenaShaderProgram, "materialy");
         locStenaMaterial = gl.glGetUniformLocation(stenaShaderProgram, "material");
         locStenaSouradnice = gl.glGetUniformLocation(stenaShaderProgram, "pozice");
+        locStenaUtlum = gl.glGetUniformLocation(stenaShaderProgram, "utlum");
 
         cam = cam.withPosition(new Vec3D(5, 5, 2.5))
                 .withAzimuth(Math.PI * 1.25)
@@ -131,7 +133,7 @@ public class Renderer implements GLEventListener, MouseListener,
     {
         grid = MeshGenerator.generateGrid(pocetBodu, pocetBodu, gl, "inPosition");
         svetloBuf = MeshGenerator.generateGrid(25, 25, gl, "inPosition");
-        stena = MeshGenerator.generateGrid(20, 20, gl, "inPosition");
+        stena = MeshGenerator.generateGrid(2, 2, gl, "inPosition");
 
         t1 = new OGLTexture2D(gl, "/textures/stones.jpg");
         t1n = new OGLTexture2D(gl, "/textures/stonesn.png");
@@ -284,6 +286,12 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniform1i(gridLocMaterial, material);
         gl.glUniform1i(gridLocTextura, textura);
         gl.glUniform1f(gridLocCas, cas);
+        int utlum = 0;
+        if (utlumy)
+        {
+            utlum = 1;
+        }
+        gl.glUniform1i(gridLocUtlum, utlum);
 
         t1.bind(gridShaderProgram, "tex1", 0);
         t1n.bind(gridShaderProgram, "tex1Normal", 1);
@@ -300,28 +308,28 @@ public class Renderer implements GLEventListener, MouseListener,
 
         grid.draw(GL2GL3.GL_TRIANGLES, gridShaderProgram);
 
-        for (int i = 0; i < steny.size(); i++)
+        if (zdi)
         {
-            double souradnice = 0;
-            double souradniceOka = 0;
-            if (steny.get(i).getW() == 1)
+            for (int i = 0; i < steny.size(); i++)
             {
-                souradnice = steny.get(i).getX();
-                souradniceOka = poziceOka.getX();
-            }
-            else if (steny.get(i).getW() == 2)
-            {
-                souradnice = steny.get(i).getY();
-                souradniceOka = poziceOka.getY();
-                
-            }
-            else if (steny.get(i).getW() == 3)
-            {
-                souradnice = steny.get(i).getZ();
-                souradniceOka = poziceOka.getZ();                
-            }
-            
-            if (!((souradnice < 0 && souradniceOka < 0)
+                double souradnice = 0;
+                double souradniceOka = 0;
+                if (steny.get(i).getW() == 1)
+                {
+                    souradnice = steny.get(i).getX();
+                    souradniceOka = poziceOka.getX();
+                } else if (steny.get(i).getW() == 2)
+                {
+                    souradnice = steny.get(i).getY();
+                    souradniceOka = poziceOka.getY();
+
+                } else if (steny.get(i).getW() == 3)
+                {
+                    souradnice = steny.get(i).getZ();
+                    souradniceOka = poziceOka.getZ();
+                }
+
+                if (!((souradnice < 0 && souradniceOka < 0)
                         || (souradnice > 0 && souradniceOka > 0)))
                 {
 
@@ -338,6 +346,12 @@ public class Renderer implements GLEventListener, MouseListener,
                     gl.glUniform1f(locStenaSvetlo, svetlo);
                     gl.glUniform1i(locStenaMaterial, material);
                     gl.glUniform1i(locStenaTex, textura);
+                    utlum = 0;
+                    if (utlumy)
+                    {
+                        utlum = 1;
+                    }
+                    gl.glUniform1i(locStenaUtlum, utlum);
 
                     t1.bind(stenaShaderProgram, "tex1", 0);
                     t1n.bind(stenaShaderProgram, "tex1Normal", 1);
@@ -349,6 +363,7 @@ public class Renderer implements GLEventListener, MouseListener,
 
                     stena.draw(GL2GL3.GL_TRIANGLES, stenaShaderProgram);
                 }
+            }
         }
 
         for (int i = 0; i < svetla.size(); i++)
@@ -570,4 +585,25 @@ public class Renderer implements GLEventListener, MouseListener,
     {
         this.textura = textura;
     }
+
+    public boolean isUtlumy()
+    {
+        return utlumy;
+    }
+
+    public boolean isZdi()
+    {
+        return zdi;
+    }
+
+    public void setZdi(boolean zdi)
+    {
+        this.zdi = zdi;
+    }
+
+    public void setUtlumy(boolean utlumy)
+    {
+        this.utlumy = utlumy;
+    }
+
 }

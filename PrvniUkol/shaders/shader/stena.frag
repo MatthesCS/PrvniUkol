@@ -31,12 +31,17 @@ uniform sampler2D tex2;
 uniform sampler2D tex2Normal;
 uniform sampler2D tex2Vyska;
 uniform int tex;
+uniform int utlum;
 
 void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
 
     vec3 position = vertPosition;
-    vec3 utlumy = svetla[cisloSvetla][2].xyz;
+    vec3 utlumy = vec3(0,0,0);
+    if(utlum == 1)
+    {
+        utlumy = svetla[cisloSvetla][2].xyz;
+    }
 
     vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
     float vzdalenostSvetla = length(svetla[cisloSvetla][0].xyz - position);

@@ -11,15 +11,12 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import transforms.Vec3D;
 
 /**
@@ -34,7 +31,7 @@ public class Gui extends JFrame
     private JLabel lbDelkaSvetla;
     
     private JButton btPolymode, btBodyPlus, btBodyMinus, btVyberBarvySvetla;
-    private JButton btDelkaSvetlaPlus, btDelkaSvetlaMinus;
+    private JButton btDelkaSvetlaPlus, btDelkaSvetlaMinus, btSteny, btUtlumy;
     
     private JPanel pnlBody, pnlDelkaSvetla;
     private JPanel pnlCenter;
@@ -59,6 +56,26 @@ public class Gui extends JFrame
             public void actionPerformed(ActionEvent e)
             {
                 renderer.setPoly(!renderer.isPoly());
+            }
+        });
+        
+        btSteny = new JButton("Stěny");
+        btSteny.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                renderer.setZdi(!renderer.isZdi());
+            }
+        });
+        
+        btUtlumy = new JButton("Útlumy světel");
+        btUtlumy.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                renderer.setUtlumy(!renderer.isUtlumy());
             }
         });
         
@@ -191,6 +208,8 @@ public class Gui extends JFrame
         });
         
         pnlCenter = new JPanel(new FlowLayout());
+        pnlCenter.add(btUtlumy);
+        pnlCenter.add(btSteny);
         pnlCenter.add(pnlBody);
         pnlCenter.add(pnlDelkaSvetla);
         pnlCenter.add(cbSvetlo);

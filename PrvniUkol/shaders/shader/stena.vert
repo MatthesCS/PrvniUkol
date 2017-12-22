@@ -27,23 +27,21 @@ uniform vec3 oko;
 uniform vec4 pozice;
 uniform float svetlo;
 uniform int material;
+uniform int utlum;
 
 vec3 desk(vec2 paramPos)
 {
     if(pozice.w == 1)
     {
         return vec3(pozice.x, paramPos * pozice.yz - pozice.yz/2);
-        velikost = pozice.yz;
     }
     else if (pozice.w == 2)
     {
         return vec3(paramPos.x * pozice.x - pozice.x/2, pozice.y, paramPos.y * pozice.z - pozice.z/2);
-        velikost = pozice.xz;
     }
     else if (pozice.w == 3)
     {
         return vec3(paramPos * pozice.xy - pozice.xy/2, pozice.z);
-        velikost = pozice.xy;
     }
     return vec3(0,0,0);
 }
@@ -113,8 +111,11 @@ void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out
 {
     vec3 position = desk(paramPos);
     vec3 normal = normal(paramPos);
-    vec3 utlumy = svetla[cisloSvetla][2].xyz;
-    //vec3 utlumy = vec3(0,0,0);
+    vec3 utlumy = vec3(0,0,0);
+    if(utlum == 1)
+    {
+        utlumy = svetla[cisloSvetla][2].xyz;
+    }
 
     vec3 smerSvetla = svetla[cisloSvetla][0].xyz - position;
     float vzdalenostSvetla = length(smerSvetla);

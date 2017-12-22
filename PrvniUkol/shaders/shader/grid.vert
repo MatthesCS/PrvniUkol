@@ -27,6 +27,7 @@ uniform vec3 oko;
 uniform float svetlo;
 uniform int material;
 uniform float cas;
+uniform int utlum;
 
 vec3 desk(vec2 paramPos)
 {
@@ -88,8 +89,11 @@ mat3 tangentMat(vec2 paramPos)
 void osvetleni(vec2 paramPos, int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 {
     vec3 position = surface(paramPos);
-    vec3 normal = normal(paramPos);
-    vec3 utlumy = svetla[cisloSvetla][2].xyz;
+    vec3 normal = normal(paramPos);vec3 utlumy = vec3(0,0,0);
+    if(utlum == 1)
+    {
+        utlumy = svetla[cisloSvetla][2].xyz;
+    }
 
     vec3 smerSvetla = svetla[cisloSvetla][0].xyz - position;
     float vzdalenostSvetla = length(smerSvetla);
