@@ -36,8 +36,7 @@ public class Gui extends JFrame
     private JPanel pnlBody, pnlDelkaSvetla;
     private JPanel pnlCenter;
     
-    
-    private JComboBox<String> cbMaterialy, cbSvetlo, cbTextura;
+    private JComboBox<String> cbMaterialy, cbSvetlo, cbTextura, cbMapping, cbObarveni;
     
     public Gui(Renderer renderer)
     {
@@ -104,6 +103,35 @@ public class Gui extends JFrame
             {
                 JComboBox cb = (JComboBox)e.getSource();
                 renderer.setTextura((Integer) cb.getSelectedIndex());
+            }
+        });
+        
+        String[] mapy = new String[] {"Vertex normála", "Normálová mapa", "Parallax mapping"};
+        
+        cbMapping = new JComboBox<>(mapy);
+        cbMapping.setSelectedIndex(0);
+        cbMapping.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JComboBox cb = (JComboBox)e.getSource();
+                renderer.setMapping((Integer) cb.getSelectedIndex());
+            }
+        });
+        
+        String[] obarveni = new String[] {"Bílá", "Vybraná barva", "Normála vert.", "Souřadnice v gridu", "Pozice",
+        "Souřadnice textury (modulo)", "Normála frag."};
+        
+        cbObarveni = new JComboBox<>(obarveni);
+        cbObarveni.setSelectedIndex(0);
+        cbObarveni.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JComboBox cb = (JComboBox)e.getSource();
+                renderer.setObarveni((Integer) cb.getSelectedIndex());
             }
         });
         
@@ -211,8 +239,10 @@ public class Gui extends JFrame
         pnlCenter.add(btUtlumy);
         pnlCenter.add(btSteny);
         pnlCenter.add(pnlBody);
+        pnlCenter.add(cbMapping);
         pnlCenter.add(pnlDelkaSvetla);
         pnlCenter.add(cbSvetlo);
+        pnlCenter.add(cbObarveni);
         pnlCenter.add(btVyberBarvySvetla);
         pnlCenter.add(cbTextura);
         

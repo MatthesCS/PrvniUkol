@@ -46,9 +46,12 @@ public class Renderer implements GLEventListener, MouseListener,
     private float cas = 0;
     private Gui gui;
 
-    private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocUtlum;
-    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura;
-    private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0;
+    private int gridShaderProgram, gridLocMat, gridLocSvetlo, gridLocOko, gridLocUtlum, gridLocMapping;
+    private int gridLocSvetla, gridLocMaterialy, gridLocMaterial, gridLocCas, gridLocTextura, gridLocObarveni;
+    private int gridLocBarva;
+    
+    private int svetlo, material = 0, pocetBodu = 50, delkaSvetla = 3, textura = 0, mapping = 0, obarveni = 0;
+    
     private int svetloShaderProgram, locSvetloMat, locSvetloSvetlo, locSvetloRotacniMat, locSvetloDelka, locSvetloScreen;
     private int stenaShaderProgram, locStenaMat, locStenaSvetla, locStenaMaterialy, locStenaOko, locStenaMaterial;
     private int locStenaSvetlo, locStenaTex, locStenaSouradnice, locStenaUtlum;
@@ -102,10 +105,11 @@ public class Renderer implements GLEventListener, MouseListener,
         gridLocSvetlo = gl.glGetUniformLocation(gridShaderProgram, "svetlo");
         gridLocOko = gl.glGetUniformLocation(gridShaderProgram, "oko");
         gridLocUtlum = gl.glGetUniformLocation(gridShaderProgram, "utlum");
-
+        gridLocMapping = gl.glGetUniformLocation(gridShaderProgram, "mapping");
         gridLocCas = gl.glGetUniformLocation(gridShaderProgram, "cas");
         gridLocTextura = gl.glGetUniformLocation(gridShaderProgram, "tex");
-
+        gridLocObarveni = gl.glGetUniformLocation(gridShaderProgram, "obarveni");
+        gridLocBarva = gl.glGetUniformLocation(gridShaderProgram, "barva");
         gridLocSvetla = gl.glGetUniformLocation(gridShaderProgram, "svetla");
         gridLocMaterialy = gl.glGetUniformLocation(gridShaderProgram, "materialy");
         gridLocMaterial = gl.glGetUniformLocation(gridShaderProgram, "material");
@@ -279,12 +283,15 @@ public class Renderer implements GLEventListener, MouseListener,
         gl.glUniformMatrix4fv(gridLocMat, 1, false,
                 ToFloatArray.convert(cam.getViewMatrix().mul(proj)), 0);
         gl.glUniform3fv(gridLocOko, 1, ToFloatArray.convert(poziceOka), 0);
+        gl.glUniform3fv(gridLocBarva, 1, ToFloatArray.convert(barva), 0);
         gl.glUniformMatrix4fv(gridLocSvetla, svetla.size(), false, ToFloatArray.convert(svetla), 0);
         gl.glUniformMatrix4fv(gridLocMaterialy, materialy.size(), false, ToFloatArray.convert(materialy), 0);
 
         gl.glUniform1f(gridLocSvetlo, svetlo);
         gl.glUniform1i(gridLocMaterial, material);
+        gl.glUniform1i(gridLocObarveni, obarveni);
         gl.glUniform1i(gridLocTextura, textura);
+        gl.glUniform1i(gridLocMapping, mapping);
         gl.glUniform1f(gridLocCas, cas);
         int utlum = 0;
         if (utlumy)
@@ -606,4 +613,23 @@ public class Renderer implements GLEventListener, MouseListener,
         this.utlumy = utlumy;
     }
 
+    public int getMapping()
+    {
+        return mapping;
+    }
+
+    public void setMapping(int mapping)
+    {
+        this.mapping = mapping;
+    }
+
+    public int getObarveni()
+    {
+        return obarveni;
+    }
+
+    public void setObarveni(int obarveni)
+    {
+        this.obarveni = obarveni;
+    }
 }

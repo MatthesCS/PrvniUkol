@@ -10,6 +10,8 @@ const int DIFFF = 12;
 const int SPECPHONGF = 13;
 const int SPECBLINNPHONGF = 14;
 
+const int NORMALA = 6;
+
 in vec4 vertColor; // input from the previous pipeline stage
 in vec3 vertPosition;
 in vec3 vertNormal;
@@ -33,21 +35,11 @@ uniform sampler2D tex2Normal;
 uniform sampler2D tex2Vyska;
 uniform int tex;
 uniform int utlum;
+uniform int mapping;
+uniform int obarveni;
 
-void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
+vec2 posun(vec3 smerOka)
 {
-
-    vec3 position = vertPosition;vec3 utlumy = vec3(0,0,0);
-    if(utlum == 1)
-    {
-        utlumy = svetla[cisloSvetla][2].xyz;
-    }
-
-    vec3 smerSvetla = normalize(lightVec[cisloSvetla]);
-    float vzdalenostSvetla = length(svetla[cisloSvetla][0].xyz - position);
-    vec3 smerOka = normalize(eyeVec);
-    vec3 halfVektor = normalize(smerSvetla + smerOka);
-
     float vyska = 0.0;
     if(tex == 1)
     {
@@ -63,19 +55,58 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 
     vec2 posun = smerOka.xy / smerOka.z * vyska;
     posun = posun + texCoord;
+    return posun;
+}
 
-    vec3 normal = vertNormal;
-    if(tex == 1)
+vec3 normala(int ktera, vec2 posun)
+{
+    vec3 norm = normalize(vertNormal);
+    if(ktera == 1)
     {
-        normal = texture(tex1Normal, posun).rgb * 2 - 1;
+        if(tex == 1)
+        {
+            norm = texture(tex1Normal, texCoord).rgb * 2 - 1;
+        }
+        else if(tex == 2)
+        {
+            norm = texture(tex2Normal, texCoord).rgb * 2 - 1;
+        }
     }
-    else if(tex == 2)
+    else if (ktera == 2)
     {
-        normal = texture(tex2Normal, posun).rgb * 2 - 1;
+        if(tex == 1)
+        {
+            norm = texture(tex1Normal, posun).rgb * 2 - 1;
+        }
+        else if(tex == 2)
+        {
+            norm = texture(tex2Normal, posun).rgb * 2 - 1;
+        }
+    }
+    return norm;
+}
+
+void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
+{
+    vec3 position = vertPosition;
+    vec3 utlumy = vec3(0,0,0);
+    if(utlum == 1)
+    {
+        utlumy = svetla[cisloSvetla][2].xyz;
     }
 
-    //vec3 smerSvetla = normalize(svetlaPozice[cisloSvetla] - position);
-    //vec3 smerOka = normalize(oko - position);
+    vec3 smerSvetla = normalize(svetla[cisloSvetla][0].xyz - position);
+    vec3 smerOka = normalize(oko - position);
+    if(mapping > 0)
+    {
+        smerSvetla = normalize(lightVec[cisloSvetla]);
+        smerOka = normalize(eyeVec);
+    }
+    float vzdalenostSvetla = length(svetla[cisloSvetla][0].xyz - position);
+    vec3 halfVektor = normalize(smerSvetla + smerOka);
+
+    vec2 posun = posun(smerOka);
+    vec3 normal = normala(mapping, posun);
 
     vec4 ambientLightCol = materialy[material][0];
     vec4 matDifCol = materialy[material][1];
@@ -85,15 +116,27 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
 
     vec3 reflected = reflect(normalize(-smerSvetla), normal);
 
-    float difCoef = pow(max(0, smerSvetla.z), 0.7) * max(0, dot(normal, smerSvetla));
+    float difCoef = max(0, dot(normal, smerSvetla));
+    if(mapping > 0)
+    {
+        difCoef *= pow(max(0, smerSvetla.z), 0.7);
+    }
     float specCoef = 0;
     float utlum = 1.0;
     if (difCoef > 0.0)
     {
-        specCoef = pow(max(0, smerSvetla.z), 0.7) * pow(max(0,dot(smerOka, reflected)), lesk);
+        specCoef = pow(max(0,dot(smerOka, reflected)), lesk);
+        if(mapping > 0)
+        {
+            specCoef *=  pow(max(0, smerSvetla.z), 0.7);
+        }
         if (svetlo == BLINNPHONGF || svetlo == SPECBLINNPHONGF)
         {
-            specCoef = pow(max(0, smerSvetla.z), 0.7) * max(0, pow(dot(normal, halfVektor), lesk));
+            specCoef = max(0, pow(dot(normal, halfVektor), lesk));
+            if(mapping > 0)
+            {
+                specCoef *=  pow(max(0, smerSvetla.z), 0.7);
+            }
         }
         float podil = utlumy.x + utlumy.y * vzdalenostSvetla + utlumy.z * vzdalenostSvetla * vzdalenostSvetla;
         if(podil > 0)
@@ -108,7 +151,6 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     float sviceni = degrees(acos(dot(normalize(smerSviceni), normalize(- (svetla[cisloSvetla][0].xyz - position)))));
 
     float rozmazani = clamp((sviceni - uhelSviceni)/(1-uhelSviceni),0.0,1.0);
-    //clamp vratí hodnotu, pokud je v rozmezí, jinak vrátí min nebo max podle toho kde přetejká hodnota
 
     ambi = ambientLightCol * matDifCol;
     if(sviceni > uhelSviceni)
@@ -120,18 +162,24 @@ void osvetleni(int cisloSvetla, out vec4 ambi, out vec4 diff, out vec4 spec)
     {
         diff = utlum * vec4(directLightCol, 1.0) * matDifCol * difCoef; 
         spec = utlum * vec4(directLightCol, 1.0) * matSpecCol * specCoef;
-        diff = mix(vec4(0.0), diff, rozmazani);
-        spec = mix(vec4(0.0), spec, rozmazani);
-        //mix(x,y,a) = x*(1-a)+y*(a) -> mix(0,y,a) = y*a
+        diff *= rozmazani;
+        spec *= rozmazani;
     }
 }
 
 void main() {
-	//outColor = vertColor * (texture(texturaNormal, texCoord) - texture(textura, texCoord)) * normal;
         outColor = vertColor;
-	//outColor = texture(textureID, texCoord);
-        //outColor = vertColor;
-
+        
+        vec3 smerOka = normalize(oko - vertPosition);
+        if(mapping > 0)
+        {
+            smerOka = normalize(eyeVec);    
+        }
+        vec2 posun = posun(smerOka);
+        if(obarveni == NORMALA)
+        {
+            outColor = vec4(normala(mapping, posun), 1.0);
+        }
 
         if(svetlo >= LAMBERTF && svetlo <= SPECBLINNPHONGF)
         {
@@ -149,31 +197,31 @@ void main() {
             ambientSum /= POCETSVETEL;
             if(svetlo == LAMBERTF)
             {
-                outColor = ambientSum + diffuseSum;
+                outColor *= ambientSum + diffuseSum;
             }
             else if(svetlo == PHONGF)
             {
-                outColor = ambientSum + diffuseSum + specSum;
+                outColor *= ambientSum + diffuseSum + specSum;
             }
             else if(svetlo == BLINNPHONGF)
             {
-                outColor = ambientSum + diffuseSum + specSum;
+                outColor *= ambientSum + diffuseSum + specSum;
             }
             else if(svetlo == AMBF)
             {
-                outColor = ambientSum;
+                outColor *= ambientSum;
             }
             else if(svetlo == DIFFF)
             {
-                outColor = diffuseSum;
+                outColor *= diffuseSum;
             }
             else if(svetlo == SPECPHONGF)
             {
-                outColor = specSum;
+                outColor *= specSum;
             }
             else if(svetlo == SPECBLINNPHONGF)
             {
-                outColor = specSum;
+                outColor *= specSum;
             }
         }
         if (tex == 1)

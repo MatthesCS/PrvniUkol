@@ -10,6 +10,12 @@ const int DIFFV = 5;
 const int SPECPHONGV = 6;
 const int SPECBLINNPHONGV = 7;
 
+const int VYBRANA = 1;
+const int NORMALA = 2;
+const int POSITION = 3;
+const int SOURADNICE = 4;
+const int TEXSOURADNICE = 5;
+
 const float PI = 3.1415927;
 const float DELTA = 0.001;
 
@@ -28,6 +34,8 @@ uniform float svetlo;
 uniform int material;
 uniform float cas;
 uniform int utlum;
+uniform int obarveni;
+uniform vec3 barva;
 
 vec3 desk(vec2 paramPos)
 {
@@ -155,11 +163,27 @@ void main() {
 
     vertPosition = position;
     vertNormal = normal(inPosition);
-    //vertColor = vec4(vec3(vertNormal)*0.5+0.5, 1.0);
-    //vertColor = vec4(inPosition, 0.0, 1.0);
-    //vertColor = vec3(position);
-    //vertColor = vec4(texCoord, 0.0, 1.0);
     vertColor = vec4(1.0);
+    if(obarveni == VYBRANA)
+    {
+        vertColor = vec4(barva, 1.0);
+    }
+    else if (obarveni == NORMALA)
+    {
+        vertColor = vec4(vertNormal, 1.0);
+    }
+    else if (obarveni == POSITION)
+    {
+        vertColor = vec4(inPosition, 0.0, 1.0);
+    }
+    else if (obarveni == SOURADNICE)
+    {
+        vertColor = vec4(position, 1.0);
+    }
+    else if (obarveni == TEXSOURADNICE)
+    {
+        vertColor = vec4(mod(texCoord, 1.001), 0.0, 1.0);
+    }
 
     mat3 tanMat = tangentMat(inPosition);
     eyeVec = (oko - vertPosition)* tanMat;
@@ -186,31 +210,31 @@ void main() {
 
         if(svetlo == LAMBERTV)
         {
-            vertColor = ambientSum + diffuseSum;
+            vertColor *= ambientSum + diffuseSum;
         }
         else if(svetlo == PHONGV)
         {
-            vertColor = ambientSum + diffuseSum + specSum;
+            vertColor *= ambientSum + diffuseSum + specSum;
         }
         else if(svetlo == BLINNPHONGV)
         {
-            vertColor = ambientSum + diffuseSum + specSum;
+            vertColor *= ambientSum + diffuseSum + specSum;
         }
         else if(svetlo == AMBV)
         {
-            vertColor = ambientSum;
+            vertColor *= ambientSum;
         }
         else if(svetlo == DIFFV)
         {
-            vertColor = diffuseSum;
+            vertColor *= diffuseSum;
         }
         else if(svetlo == SPECPHONGV)
         {
-            vertColor = specSum;
+            vertColor *= specSum;
         }
         else if(svetlo == SPECBLINNPHONGV)
         {
-            vertColor = specSum;
+            vertColor *= specSum;
         }
     }
 } 
